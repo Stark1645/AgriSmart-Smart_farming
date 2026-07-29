@@ -1,11 +1,16 @@
 package com.examly.springapp.model;
 
 import jakarta.persistence.*;
+import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "sensorreadings")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class SensorReading {
 
     @Id
@@ -25,31 +30,10 @@ public class SensorReading {
     private String unit;
 
     @Column(name = "recorded_at")
+    @Builder.Default
     private LocalDateTime recordedAt = LocalDateTime.now();
 
     @Column(name = "alert_triggered")
+    @Builder.Default
     private Boolean alertTriggered = false;
-
-    public SensorReading() {}
-
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-
-    public Long getFarmId() { return farmId; }
-    public void setFarmId(Long farmId) { this.farmId = farmId; }
-
-    public String getSensorType() { return sensorType; }
-    public void setSensorType(String sensorType) { this.sensorType = sensorType; }
-
-    public BigDecimal getValue() { return value; }
-    public void setValue(BigDecimal value) { this.value = value; }
-
-    public String getUnit() { return unit; }
-    public void setUnit(String unit) { this.unit = unit; }
-
-    public LocalDateTime getRecordedAt() { return recordedAt; }
-    public void setRecordedAt(LocalDateTime recordedAt) { this.recordedAt = recordedAt; }
-
-    public Boolean getAlertTriggered() { return alertTriggered; }
-    public void setAlertTriggered(Boolean alertTriggered) { this.alertTriggered = alertTriggered; }
 }

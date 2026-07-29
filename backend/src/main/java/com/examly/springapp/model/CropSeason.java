@@ -1,11 +1,16 @@
 package com.examly.springapp.model;
 
 import jakarta.persistence.*;
+import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
 @Table(name = "cropseasons")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class CropSeason {
 
     @Id
@@ -31,6 +36,7 @@ public class CropSeason {
     private BigDecimal areaAcres;
 
     @Column(nullable = false, length = 50)
+    @Builder.Default
     private String status = "GROWING";
 
     @Column(name = "expected_yield_kg", precision = 10, scale = 2)
@@ -38,36 +44,4 @@ public class CropSeason {
 
     @Column(name = "actual_yield_kg", precision = 10, scale = 2)
     private BigDecimal actualYieldKg;
-
-    public CropSeason() {}
-
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-
-    public Long getFarmId() { return farmId; }
-    public void setFarmId(Long farmId) { this.farmId = farmId; }
-
-    public String getCropName() { return cropName; }
-    public void setCropName(String cropName) { this.cropName = cropName; }
-
-    public String getVariety() { return variety; }
-    public void setVariety(String variety) { this.variety = variety; }
-
-    public LocalDate getSowingDate() { return sowingDate; }
-    public void setSowingDate(LocalDate sowingDate) { this.sowingDate = sowingDate; }
-
-    public LocalDate getExpectedHarvest() { return expectedHarvest; }
-    public void setExpectedHarvest(LocalDate expectedHarvest) { this.expectedHarvest = expectedHarvest; }
-
-    public BigDecimal getAreaAcres() { return areaAcres; }
-    public void setAreaAcres(BigDecimal areaAcres) { this.areaAcres = areaAcres; }
-
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
-
-    public BigDecimal getExpectedYieldKg() { return expectedYieldKg; }
-    public void setExpectedYieldKg(BigDecimal expectedYieldKg) { this.expectedYieldKg = expectedYieldKg; }
-
-    public BigDecimal getActualYieldKg() { return actualYieldKg; }
-    public void setActualYieldKg(BigDecimal actualYieldKg) { this.actualYieldKg = actualYieldKg; }
 }

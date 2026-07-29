@@ -1,10 +1,15 @@
 package com.examly.springapp.model;
 
 import jakarta.persistence.*;
+import lombok.*;
 import java.time.LocalDate;
 
 @Entity
 @Table(name = "inputrecommendations")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class InputRecommendation {
 
     @Id
@@ -27,28 +32,6 @@ public class InputRecommendation {
     private LocalDate actualAppliedDate;
 
     @Column(nullable = false, length = 50)
+    @Builder.Default
     private String status = "PENDING";
-
-    public InputRecommendation() {}
-
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-
-    public Long getCropSeasonId() { return cropSeasonId; }
-    public void setCropSeasonId(Long cropSeasonId) { this.cropSeasonId = cropSeasonId; }
-
-    public String getRecommendationType() { return recommendationType; }
-    public void setRecommendationType(String recommendationType) { this.recommendationType = recommendationType; }
-
-    public String getRecommendedQuantity() { return recommendedQuantity; }
-    public void setRecommendedQuantity(String recommendedQuantity) { this.recommendedQuantity = recommendedQuantity; }
-
-    public LocalDate getRecommendedDate() { return recommendedDate; }
-    public void setRecommendedDate(LocalDate recommendedDate) { this.recommendedDate = recommendedDate; }
-
-    public LocalDate getActualAppliedDate() { return actualAppliedDate; }
-    public void setActualAppliedDate(LocalDate actualAppliedDate) { this.actualAppliedDate = actualAppliedDate; }
-
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
 }
