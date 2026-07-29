@@ -1,0 +1,102 @@
+.footer {
+  background: var(--sidebar-bg);
+  color: var(--sidebar-text);
+  padding: 60px 0 24px;
+  margin-top: 80px;
+}
+
+.footerGrid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 48px;
+  margin-bottom: 48px;
+}
+
+.brandLogo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-heading);
+  font-size: 20px;
+  font-weight: 800;
+  color: white;
+  margin-bottom: 16px;
+}
+
+.brandLogo svg { color: var(--primary-light); }
+
+.brandDesc {
+  font-size: 13px;
+  line-height: 1.7;
+  color: rgba(184,212,188,0.65);
+  max-width: 280px;
+}
+
+.socials {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.socialLink {
+  width: 34px;
+  height: 34px;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--sidebar-text);
+  transition: all var(--transition-fast);
+  text-decoration: none;
+}
+.socialLink:hover {
+  border-color: var(--primary-light);
+  color: var(--primary-light);
+  background: rgba(76,175,80,0.1);
+}
+
+.linkGroup h4 {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: white;
+  margin-bottom: 16px;
+}
+
+.linkGroup ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.linkGroup li a {
+  font-size: 13px;
+  color: rgba(184,212,188,0.6);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+.linkGroup li a:hover { color: var(--primary-light); }
+
+.footerBottom {
+  border-top: 1px solid rgba(255,255,255,0.06);
+  padding-top: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: rgba(184,212,188,0.4);
+}
+
+.built { font-weight: 500; }
+
+@media (max-width: 1024px) {
+  .footerGrid { grid-template-columns: 1fr 1fr; gap: 32px; }
+}
+
+@media (max-width: 600px) {
+  .footerGrid { grid-template-columns: 1fr; gap: 24px; }
+  .footerBottom { flex-direction: column; gap: 8px; text-align: center; }
+}

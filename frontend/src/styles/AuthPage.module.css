@@ -1,0 +1,341 @@
+.page {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: calc(100vh - 64px);
+}
+
+/* ---- Illustration Side ---- */
+.illustrationSide {
+  position: relative;
+  background: linear-gradient(160deg, var(--primary-dark) 0%, var(--primary) 50%, var(--primary-light) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60px;
+  overflow: hidden;
+}
+
+.illustrationBg {
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 20% 30%, rgba(255,255,255,0.08) 0%, transparent 50%),
+    radial-gradient(circle at 80% 70%, rgba(25,118,210,0.15) 0%, transparent 50%),
+    repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 30px,
+      rgba(255,255,255,0.02) 30px,
+      rgba(255,255,255,0.02) 31px
+    );
+}
+
+.illustrationContent {
+  position: relative;
+  z-index: 1;
+  max-width: 420px;
+}
+
+.illBrand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: white;
+  font-family: var(--font-heading);
+  font-size: 22px;
+  font-weight: 800;
+  margin-bottom: 48px;
+  letter-spacing: -0.5px;
+}
+
+.illTitle {
+  font-size: clamp(26px, 3vw, 36px);
+  font-weight: 800;
+  color: white;
+  line-height: 1.2;
+  margin-bottom: 16px;
+  letter-spacing: -0.5px;
+}
+
+.illDesc {
+  font-size: 15px;
+  color: rgba(255,255,255,0.75);
+  line-height: 1.7;
+  margin-bottom: 40px;
+}
+
+.illStats {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 40px;
+  padding: 20px;
+  background: rgba(255,255,255,0.1);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.15);
+}
+
+.illStat { text-align: center; flex: 1; }
+
+.illStatV {
+  display: block;
+  font-family: var(--font-heading);
+  font-size: 24px;
+  font-weight: 800;
+  color: white;
+}
+
+.illStatL {
+  font-size: 11px;
+  color: rgba(255,255,255,0.6);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+.illBadges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.illBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.2);
+  color: rgba(255,255,255,0.85);
+  padding: 5px 12px;
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* ---- Form Side ---- */
+.formSide {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 40px;
+  background: var(--bg);
+}
+
+.formCard {
+  width: 100%;
+  max-width: 420px;
+}
+
+.formHeader {
+  margin-bottom: 32px;
+}
+
+.formHeader h1 {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+
+.formHeader p {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.errorBanner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--danger-light);
+  border: 1px solid #ffcdd2;
+  color: var(--danger);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.inputWrap { position: relative; }
+
+.inputIcon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.inputWithIcon {
+  padding-left: 38px !important;
+}
+
+.pwToggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  transition: color var(--transition-fast);
+}
+.pwToggle:hover { color: var(--text-primary); }
+
+.formOptions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.checkLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.checkLabel input { accent-color: var(--primary); }
+
+.forgotLink {
+  font-size: 13px;
+  color: var(--primary);
+  font-weight: 600;
+  text-decoration: none;
+}
+.forgotLink:hover { text-decoration: underline; }
+
+.submitBtn {
+  justify-content: center;
+  padding: 13px !important;
+  font-size: 15px !important;
+  margin-top: 4px;
+}
+
+.loadingSpinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: block;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.demoNote {
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-muted);
+  background: var(--bg-secondary);
+  border-radius: var(--radius-sm);
+  padding: 10px;
+  margin-top: 16px;
+}
+
+.formFooter {
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: 20px;
+}
+
+.formFooter a { color: var(--primary); font-weight: 600; text-decoration: none; }
+.formFooter a:hover { text-decoration: underline; }
+
+/* Multi-step register specific */
+.stepIndicator {
+  display: flex;
+  align-items: center;
+  margin-bottom: 32px;
+}
+
+.stepItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.stepCircle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-muted);
+  background: var(--card);
+  flex-shrink: 0;
+  transition: all var(--transition-fast);
+}
+
+.stepCircle.active { border-color: var(--primary); background: var(--primary); color: white; }
+.stepCircle.done { border-color: var(--success); background: var(--success); color: white; }
+
+.stepLabel { font-size: 11px; font-weight: 600; color: var(--text-muted); }
+.stepLabel.active { color: var(--primary); }
+.stepLabel.done { color: var(--success); }
+
+.stepLine {
+  flex: 1;
+  height: 2px;
+  background: var(--border);
+  margin: 0 8px;
+  border-radius: 1px;
+  transition: background var(--transition);
+}
+.stepLine.done { background: var(--success); }
+
+.formNav {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.formNav .btn { flex: 1; justify-content: center; }
+
+.rolesGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.roleCard {
+  border: 2px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-align: center;
+}
+
+.roleCard:hover { border-color: var(--primary); background: var(--primary-50); }
+.roleCard.selected { border-color: var(--primary); background: var(--primary-50); }
+
+.roleCard h4 { font-size: 13px; font-weight: 700; color: var(--text-primary); margin-bottom: 3px; margin-top: 8px; }
+.roleCard p { font-size: 11px; color: var(--text-secondary); }
+
+@media (max-width: 900px) {
+  .page { grid-template-columns: 1fr; }
+  .illustrationSide { display: none; }
+  .formSide { padding: 40px 24px; }
+}
