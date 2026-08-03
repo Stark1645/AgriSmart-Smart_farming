@@ -30,4 +30,11 @@ public class RecommendationController {
     public ResponseEntity<List<Map<String, Object>>> getMarketPrices() {
         return ResponseEntity.ok(recommendationService.getMarketPrices());
     }
+
+    @Operation(summary = "Report Pest/Disease Alert (FR4)")
+    @PostMapping("/pest-alerts")
+    public ResponseEntity<Map<String, Object>> createPestAlert(@RequestBody Map<String, Object> alertDetails) {
+        Map<String, Object> alert = recommendationService.createPestAlert(alertDetails);
+        return new ResponseEntity<>(alert, org.springframework.http.HttpStatus.CREATED);
+    }
 }

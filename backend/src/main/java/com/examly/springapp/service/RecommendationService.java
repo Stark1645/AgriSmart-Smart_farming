@@ -55,4 +55,15 @@ public class RecommendationService {
 
         return prices;
     }
+
+    public Map<String, Object> createPestAlert(Map<String, Object> alertData) {
+        Map<String, Object> alert = new HashMap<>(alertData);
+        alert.put("status", "ALERT_CREATED");
+        alert.put("alertId", System.currentTimeMillis());
+        alert.put("recordedAt", java.time.LocalDateTime.now().toString());
+        if (!alert.containsKey("recommendedAction")) {
+            alert.put("recommendedAction", "Apply targeted pesticide/fungicide recommendation within 24 hours");
+        }
+        return alert;
+    }
 }
