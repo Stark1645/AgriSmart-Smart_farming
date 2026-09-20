@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { authAPI, farmAPI } from '../services/api';
+import { mockFarms } from '../services/mockData';
 
 const AppContext = createContext(null);
 
@@ -22,10 +23,84 @@ export function AppProvider({ children }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [theme, setTheme] = useState('light');
   const [notifications, setNotifications] = useState(3);
+  const [farms, setFarms] = useState(() => {
+    try {
+      const cached = localStorage.getItem('agrismart_cached_farms');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (e) {}
+    return mockFarms;
+  });
+
+  const loadFarms = async () => {
+    try {
+      const backendFarms = await farmAPI.getAllFarms();
+      if (Array.isArray(backendFarms) && backendFarms.length > 0) {
+        const normalized = backendFarms.map(bf => ({
+          id: bf.id,
+          name: bf.farmName,
+          farmName: bf.farmName,
+          district: bf.district || 'Coimbatore',
+          area: parseFloat(bf.totalAreaAcres) || 10,
+          totalAreaAcres: parseFloat(bf.totalAreaAcres) || 10,
+          soilType: bf.soilType || 'Loamy',
+          status: (bf.status || 'ACTIVE').toUpperCase() === 'ACTIVE' ? 'Active' : (bf.status === 'FALLOW' ? 'Fallow' : 'Inactive'),
+          crops: ['Wheat', 'Paddy'],
+          moisture: 65,
+          gps: bf.lat && bf.lng ? `${Number(bf.lat).toFixed(2)}° N, ${Number(bf.lng).toFixed(2)}° E` : '11.02° N, 76.96° E',
+          owner: 'Current Farmer',
+          lastUpdated: 'Today',
+        }));
+        setFarms(normalized);
+        localStorage.setItem('agrismart_cached_farms', JSON.stringify(normalized));
+        return normalized;
+      }
+    } catch (err) {
+      console.warn('Backend farms fetch note:', err);
+    }
+    const cached = localStorage.getItem('agrismart_cached_farms');
+    if (cached) {
+      try {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setFarms(parsed);
+          return parsed;
+        }
+      } catch (e) {}
+    }
+    setFarms(mockFarms);
+    return mockFarms;
+  };
 
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-  }, [theme]);
+    loadFarms();
+  }, []);
+
+  const updateFarmInContext = (id, updatedData) => {
+    setFarms(prev => {
+      const next = prev.map(f => f.id === id ? { ...f, ...updatedData } : f);
+      localStorage.setItem('agrismart_cached_farms', JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const addFarmToContext = (newFarm) => {
+    setFarms(prev => {
+      const next = [newFarm, ...prev.filter(f => f.id !== newFarm.id)];
+      localStorage.setItem('agrismart_cached_farms', JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const deleteFarmFromContext = (id) => {
+    setFarms(prev => {
+      const next = prev.filter(f => f.id !== id);
+      localStorage.setItem('agrismart_cached_farms', JSON.stringify(next));
+      return next;
+    });
+  };
 
   // Load active session from sessionStorage or localStorage
   useEffect(() => {
@@ -197,6 +272,12 @@ export function AppProvider({ children }) {
       toggleTheme,
       notifications,
       setNotifications,
+      farms,
+      setFarms,
+      loadFarms,
+      updateFarmInContext,
+      addFarmToContext,
+      deleteFarmFromContext,
     }}>
       {children}
     </AppContext.Provider>

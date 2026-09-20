@@ -15,7 +15,7 @@ import { useApp } from '../context/AppContext';
 import StatCard from '../components/StatCard';
 import {
   mockYieldData, mockWaterUsage, mockCropDistribution,
-  mockNotifications, mockWeather, mockFarms, mockCrops
+  mockNotifications, mockWeather, mockCrops
 } from '../services/mockData';
 import { formatNumber, formatCurrency } from '../utils/helpers';
 import styles from '../styles/Dashboard.module.css';
@@ -35,13 +35,15 @@ const quickActions = [
 ];
 
 export default function Dashboard() {
-  const { user } = useApp();
+  const { user, farms } = useApp();
   const navigate = useNavigate();
 
   const unreadNotifs = mockNotifications.filter(n => !n.read).slice(0, 4);
   const activeCrops = mockCrops.filter(c => c.status === 'Growing').length;
-  const totalFarms = mockFarms.length;
-  const avgMoisture = Math.round(mockFarms.reduce((a, f) => a + f.moisture, 0) / mockFarms.length);
+  const totalFarms = farms.length;
+  const avgMoisture = farms.length > 0
+    ? Math.round(farms.reduce((a, f) => a + (f.moisture || 65), 0) / farms.length)
+    : 65;
 
   return (
     <div>
@@ -276,23 +278,26 @@ export default function Dashboard() {
             <button className="btn btn-ghost btn-sm" onClick={() => navigate('/farm-management')}>Manage</button>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {mockFarms.slice(0, 4).map(farm => (
+            {farms.slice(0, 5).map(farm => (
               <div key={farm.id} className={styles.farmRow}>
                 <div className={styles.farmIcon}><MdGrass size={16} /></div>
                 <div style={{ flex: 1 }}>
-                  <p style={{ fontSize: 13, fontWeight: 600 }}>{farm.name}</p>
-                  <p style={{ fontSize: 11, color: 'var(--text-muted)' }}>{farm.district} · {farm.area} acres</p>
+                  <p style={{ fontSize: 13, fontWeight: 600 }}>{farm.name || farm.farmName}</p>
+                  <p style={{ fontSize: 11, color: 'var(--text-muted)' }}>{farm.district} · {farm.area || farm.totalAreaAcres} acres</p>
                 </div>
                 <div>
                   <div style={{ fontSize: 12, fontWeight: 600, textAlign: 'right', marginBottom: 4 }}>
-                    💧 {farm.moisture}%
+                    💧 {farm.moisture || 65}%
                   </div>
                   <div className="progress-bar-track" style={{ width: 60 }}>
-                    <div className="progress-bar-fill" style={{ width: `${farm.moisture}%`, background: farm.moisture > 65 ? 'var(--success)' : farm.moisture > 45 ? 'var(--warning)' : 'var(--danger)' }} />
+                    <div className="progress-bar-fill" style={{ width: `${farm.moisture || 65}%`, background: (farm.moisture || 65) > 65 ? 'var(--success)' : (farm.moisture || 65) > 45 ? 'var(--warning)' : 'var(--danger)' }} />
                   </div>
                 </div>
               </div>
             ))}
+            {farms.length === 0 && (
+              <p style={{ fontSize: 12, color: 'var(--text-muted)', textAlign: 'center', padding: '12px 0' }}>No registered farms found.</p>
+            )}
           </div>
         </motion.div>
       </div>

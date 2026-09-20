@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { FiSearch, FiPlus, FiEdit2, FiTrash2, FiEye, FiFilter, FiMapPin, FiLayers, FiCheckCircle } from 'react-icons/fi';
 import { MdGrass, MdLocationOn, MdWaterDrop } from 'react-icons/md';
 import StatusBadge from '../components/StatusBadge';
-import { mockFarms as initialMockFarms } from '../services/mockData';
+import { useApp } from '../context/AppContext';
 import { farmAPI } from '../services/api';
 import styles from '../styles/PageShared.module.css';
 
@@ -13,7 +13,7 @@ const SOIL_TYPES = ['Loamy', 'Clay', 'Sandy', 'Sandy Loam', 'Red Earth', 'Black 
 const DISTRICTS = ['Ludhiana', 'Coimbatore', 'Nashik', 'Anand', 'Lucknow', 'Mandya', 'Amritsar', 'Pune', 'Karnal', 'Guntur'];
 
 export default function FarmManagement() {
-  const [farms, setFarms] = useState(initialMockFarms);
+  const { farms, loadFarms, addFarmToContext, updateFarmInContext, deleteFarmFromContext } = useApp();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [selected, setSelected] = useState(null);
@@ -43,9 +43,9 @@ export default function FarmManagement() {
   const handleOpenEdit = (farm) => {
     setEditingFarm(farm);
     setEditForm({
-      farmName: farm.name || '',
+      farmName: farm.name || farm.farmName || '',
       district: farm.district || 'Ludhiana',
-      totalAreaAcres: String(farm.area || '20.0'),
+      totalAreaAcres: String(farm.area || farm.totalAreaAcres || '20.0'),
       soilType: farm.soilType || 'Loamy',
       status: farm.status || 'Active',
     });
@@ -72,29 +72,23 @@ export default function FarmManagement() {
       console.warn('Backend update failed, updating locally:', err);
     }
 
-    setFarms(prev => prev.map(f => {
-      if (f.id === editingFarm.id) {
-        return {
-          ...f,
-          name: editForm.farmName,
-          district: editForm.district,
-          area: parseFloat(editForm.totalAreaAcres) || f.area,
-          soilType: editForm.soilType,
-          status: editForm.status,
-          lastUpdated: 'Just now',
-        };
-      }
-      return f;
-    }));
+    const updatedFields = {
+      name: editForm.farmName,
+      farmName: editForm.farmName,
+      district: editForm.district,
+      area: parseFloat(editForm.totalAreaAcres) || (editingFarm.area || 10),
+      totalAreaAcres: parseFloat(editForm.totalAreaAcres) || (editingFarm.totalAreaAcres || 10),
+      soilType: editForm.soilType,
+      status: editForm.status,
+      lastUpdated: 'Just now',
+    };
+
+    updateFarmInContext(editingFarm.id, updatedFields);
 
     if (selected?.id === editingFarm.id) {
       setSelected(prev => ({
         ...prev,
-        name: editForm.farmName,
-        district: editForm.district,
-        area: parseFloat(editForm.totalAreaAcres) || prev.area,
-        soilType: editForm.soilType,
-        status: editForm.status,
+        ...updatedFields,
       }));
     }
 
@@ -111,44 +105,15 @@ export default function FarmManagement() {
       } catch (err) {
         console.warn('Backend delete failed, removing locally:', err);
       }
-      setFarms(prev => prev.filter(f => f.id !== farm.id));
+      deleteFarmFromContext(farm.id);
       if (selected?.id === farm.id) setSelected(null);
     }
   };
 
-  // Load farms from Spring Boot Backend MySQL API
+  // Sync live farms from Spring Boot Backend MySQL API
   useEffect(() => {
     loadFarms();
   }, []);
-
-  const loadFarms = async () => {
-    try {
-      const backendFarms = await farmAPI.getAllFarms();
-      if (backendFarms && backendFarms.length > 0) {
-        // Normalize backend farms to match frontend UI format
-        const formatted = backendFarms.map(bf => ({
-          id: bf.id,
-          name: bf.farmName,
-          district: bf.district || 'Ludhiana',
-          area: parseFloat(bf.totalAreaAcres) || 20,
-          soilType: bf.soilType || 'Loamy',
-          status: bf.status || 'Active',
-          crops: ['Wheat', 'Paddy'],
-          moisture: 65,
-          gps: `${bf.lat || 30.90}° N, ${bf.lng || 75.85}° E`,
-          owner: 'Current Farmer',
-          lastUpdated: 'Today',
-        }));
-        
-        // Merge with initial farms without duplicates
-        const existingIds = new Set(formatted.map(f => f.name.toLowerCase()));
-        const uniqueInitial = initialMockFarms.filter(f => !existingIds.has(f.name.toLowerCase()));
-        setFarms([...formatted, ...uniqueInitial]);
-      }
-    } catch (err) {
-      console.warn('Backend offline, loaded local farm list:', err);
-    }
-  };
 
   const handleCreateFarm = async (e) => {
     e.preventDefault();
@@ -173,8 +138,10 @@ export default function FarmManagement() {
       const newLocalFarm = {
         id: saved?.id || Date.now(),
         name: form.farmName,
+        farmName: form.farmName,
         district: form.district,
         area: parseFloat(form.totalAreaAcres) || 10,
+        totalAreaAcres: parseFloat(form.totalAreaAcres) || 10,
         soilType: form.soilType,
         status: 'Active',
         crops: form.crops.split(',').map(c => c.trim()),
@@ -184,7 +151,7 @@ export default function FarmManagement() {
         lastUpdated: 'Just now',
       };
 
-      setFarms(prev => [newLocalFarm, ...prev]);
+      addFarmToContext(newLocalFarm);
       setSaveSuccess(true);
       setTimeout(() => {
         setSaveSuccess(false);
@@ -204,8 +171,10 @@ export default function FarmManagement() {
       const newLocalFarm = {
         id: Date.now(),
         name: form.farmName,
+        farmName: form.farmName,
         district: form.district,
         area: parseFloat(form.totalAreaAcres) || 10,
+        totalAreaAcres: parseFloat(form.totalAreaAcres) || 10,
         soilType: form.soilType,
         status: 'Active',
         crops: form.crops.split(',').map(c => c.trim()),
@@ -214,7 +183,7 @@ export default function FarmManagement() {
         owner: 'Current Farmer',
         lastUpdated: 'Just now',
       };
-      setFarms(prev => [newLocalFarm, ...prev]);
+      addFarmToContext(newLocalFarm);
       setShowModal(false);
     } finally {
       setSubmitting(false);

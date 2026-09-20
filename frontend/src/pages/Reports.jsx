@@ -1,38 +1,23 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
-import { FiDownload, FiFileText, FiFilter, FiCheck } from 'react-icons/fi';
+import { FiDownload, FiFilter, FiFileText, FiCheck, FiPrinter } from 'react-icons/fi';
 import { MdPictureAsPdf, MdTableChart } from 'react-icons/md';
+import { BarChart, Bar, LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { mockYieldData } from '../services/mockData';
-import { farmAPI } from '../services/api';
+import { useApp } from '../context/AppContext';
 import styles from '../styles/PageShared.module.css';
 
-const fadeUp = { hidden: { opacity: 0, y: 20 }, visible: (i = 0) => ({ opacity: 1, y: 0, transition: { delay: i * 0.06, duration: 0.4 } }) };
+const fadeUp = { hidden: { opacity: 0, y: 20 }, visible: (i = 0) => ({ opacity: 1, y: 0, transition: { delay: i * 0.05, duration: 0.4 } }) };
 
 export default function Reports() {
+  const { farms } = useApp();
   const [dateFrom, setDateFrom] = useState('2026-01-01');
   const [dateTo, setDateTo] = useState('2026-07-13');
   const [reportType, setReportType] = useState('yield');
-  const [farms, setFarms] = useState([]);
   const [selectedFarm, setSelectedFarm] = useState('All Farms');
   const [generating, setGenerating] = useState(false);
   const [reportData, setReportData] = useState(mockYieldData.slice(0, 7));
   const [toast, setToast] = useState('');
-
-  useEffect(() => {
-    loadFarms();
-  }, []);
-
-  const loadFarms = async () => {
-    try {
-      const data = await farmAPI.getAllFarms();
-      if (Array.isArray(data) && data.length > 0) {
-        setFarms(data);
-      }
-    } catch (e) {
-      console.warn('Could not fetch farm list for reports:', e);
-    }
-  };
 
   const showToastMsg = (msg) => {
     setToast(msg);
@@ -130,15 +115,9 @@ export default function Reports() {
               <option value="All Farms">All Farms</option>
               {farms.map(f => (
                 <option key={f.id} value={f.farmName || f.name}>
-                  {f.farmName || f.name}
+                  {f.name || f.farmName} ({f.district} — {f.area || f.totalAreaAcres} ac)
                 </option>
               ))}
-              {farms.length === 0 && (
-                <>
-                  <option value="Green Valley Farm">Green Valley Farm</option>
-                  <option value="Sunrise Paddy Fields">Sunrise Paddy Fields</option>
-                </>
-              )}
             </select>
           </div>
           <button className="btn btn-primary" onClick={handleGenerateReport} disabled={generating}>

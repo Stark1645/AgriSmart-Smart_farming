@@ -6,7 +6,8 @@ import {
 import { MdSensors, MdBattery80, MdFilterList, MdCloudQueue } from 'react-icons/md';
 import StatusBadge from '../components/StatusBadge';
 import { mockSensorData } from '../services/mockData';
-import { sensorAPI, farmAPI } from '../services/api';
+import { sensorAPI } from '../services/api';
+import { useApp } from '../context/AppContext';
 import styles from '../styles/PageShared.module.css';
 
 const fadeUp = { hidden: { opacity: 0, y: 20 }, visible: (i = 0) => ({ opacity: 1, y: 0, transition: { delay: i * 0.06, duration: 0.4 } }) };
@@ -64,32 +65,24 @@ function GaugeCard({ sensor, value }) {
 
 export default function IoTSensors() {
   const { current: defaultCurrent, history, sensors: defaultSensors } = mockSensorData;
+  const { farms } = useApp();
   const [current, setCurrent] = useState(defaultCurrent);
   const [sensors, setSensors] = useState(defaultSensors);
-  const [farms, setFarms] = useState([]);
-  const [selectedFarmId, setSelectedFarmId] = useState(1);
+  const [selectedFarmId, setSelectedFarmId] = useState(() => (farms && farms.length > 0 ? farms[0].id : 101));
   const [weather, setWeather] = useState(null);
   const [isLive, setIsLive] = useState(false);
 
   useEffect(() => {
-    loadFarms();
-  }, []);
+    if (farms && farms.length > 0 && !farms.some(f => f.id === selectedFarmId)) {
+      setSelectedFarmId(farms[0].id);
+    }
+  }, [farms]);
 
   useEffect(() => {
-    loadSensorTelemetry(selectedFarmId);
-  }, [selectedFarmId]);
-
-  const loadFarms = async () => {
-    try {
-      const data = await farmAPI.getAllFarms();
-      if (Array.isArray(data) && data.length > 0) {
-        setFarms(data);
-        if (!selectedFarmId) setSelectedFarmId(data[0].id);
-      }
-    } catch (e) {
-      console.warn('Could not fetch farm list for sensors:', e);
+    if (selectedFarmId) {
+      loadSensorTelemetry(selectedFarmId);
     }
-  };
+  }, [selectedFarmId]);
 
   const loadSensorTelemetry = async (farmId) => {
     try {
@@ -163,7 +156,7 @@ export default function IoTSensors() {
               >
                 {farms.map((f) => (
                   <option key={f.id} value={f.id}>
-                    {f.farmName || f.name || `Farm #${f.id}`}
+                    {f.name || f.farmName || `Farm #${f.id}`} ({f.district} — {f.area || f.totalAreaAcres} ac)
                   </option>
                 ))}
               </select>

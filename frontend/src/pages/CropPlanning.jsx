@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { GiPlantSeed } from 'react-icons/gi';
 import { FiCalendar, FiTarget, FiTrendingUp, FiPlus, FiEdit2, FiTrash2, FiEye, FiCheck } from 'react-icons/fi';
 import StatusBadge from '../components/StatusBadge';
-import { mockCrops, mockFarms } from '../services/mockData';
+import { mockCrops } from '../services/mockData';
+import { useApp } from '../context/AppContext';
 import { cropAPI } from '../services/api';
 import styles from '../styles/PageShared.module.css';
 
@@ -13,6 +14,7 @@ const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov
 const STAGES = ['Sowing', 'Vegetative', 'Flowering', 'Grain Filling', 'Ripening', 'Harvest Ready', 'Harvested'];
 
 export default function CropPlanning() {
+  const { farms } = useApp();
   const [crops, setCrops] = useState(mockCrops);
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingCrop, setEditingCrop] = useState(null);
@@ -22,7 +24,7 @@ export default function CropPlanning() {
   const [cropForm, setCropForm] = useState({
     name: '',
     variety: '',
-    farmId: 1,
+    farmId: 101,
     sowingDate: '2026-03-01',
     harvestDate: '2026-08-15',
     expectedYield: 5000,
@@ -174,7 +176,12 @@ export default function CropPlanning() {
             <div className={styles.cropHeader}>
               <div>
                 <div className={styles.cropName}>{crop.name}</div>
-                <div className={styles.cropDetail}>{crop.variety} · Farm #{crop.farmId}</div>
+                <div className={styles.cropDetail}>
+                  {crop.variety} · {(() => {
+                    const f = farms.find(farm => farm.id === crop.farmId);
+                    return f ? `${f.name || f.farmName} (${f.area || f.totalAreaAcres} ac)` : `Farm #${crop.farmId}`;
+                  })()}
+                </div>
               </div>
               <StatusBadge status={crop.health} />
             </div>
@@ -308,8 +315,12 @@ export default function CropPlanning() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div className="form-group">
                   <label className="form-label">Farm Plot</label>
-                  <select className="form-select" value={cropForm.farmId} onChange={e => setCropForm({ ...cropForm, farmId: e.target.value })}>
-                    {mockFarms.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+                  <select className="form-select" value={cropForm.farmId} onChange={e => setCropForm({ ...cropForm, farmId: Number(e.target.value) })}>
+                    {farms.map(f => (
+                      <option key={f.id} value={f.id}>
+                        {f.name || f.farmName} ({f.district} — {f.area || f.totalAreaAcres} acres)
+                      </option>
+                    ))}
                   </select>
                 </div>
                 <div className="form-group">

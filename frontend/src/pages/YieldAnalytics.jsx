@@ -6,7 +6,8 @@ import {
   CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend
 } from 'recharts';
 import { mockYieldData, mockSeasonalData, mockRadarData } from '../services/mockData';
-import { analyticsAPI, farmAPI } from '../services/api';
+import { analyticsAPI } from '../services/api';
+import { useApp } from '../context/AppContext';
 import { formatCurrency } from '../utils/helpers';
 import StatCard from '../components/StatCard';
 import { MdBarChart, MdTrendingUp, MdAttachMoney, MdShowChart, MdFilterList } from 'react-icons/md';
@@ -14,24 +15,31 @@ import { MdBarChart, MdTrendingUp, MdAttachMoney, MdShowChart, MdFilterList } fr
 const fadeUp = { hidden: { opacity: 0, y: 20 }, visible: (i = 0) => ({ opacity: 1, y: 0, transition: { delay: i * 0.06, duration: 0.4 } }) };
 
 export default function YieldAnalytics() {
+  const { farms } = useApp();
   const [profitability, setProfitability] = useState(null);
   const [inputCost, setInputCost] = useState(null);
   const [yieldData, setYieldData] = useState(null);
-  const [farms, setFarms] = useState([]);
-  const [selectedFarmId, setSelectedFarmId] = useState(1);
+  const [selectedFarmId, setSelectedFarmId] = useState(() => (farms && farms.length > 0 ? farms[0].id : 101));
   const [isLive, setIsLive] = useState(false);
 
   useEffect(() => {
-    loadAnalytics();
+    if (farms && farms.length > 0 && !farms.some(f => f.id === selectedFarmId)) {
+      setSelectedFarmId(farms[0].id);
+    }
+  }, [farms]);
+
+  useEffect(() => {
+    if (selectedFarmId) {
+      loadAnalytics(selectedFarmId);
+    }
   }, [selectedFarmId]);
 
-  const loadAnalytics = async () => {
+  const loadAnalytics = async (farmId) => {
     try {
-      const [profRes, costRes, yieldRes, farmRes] = await Promise.allSettled([
+      const [profRes, costRes, yieldRes] = await Promise.allSettled([
         analyticsAPI.getProfitability(),
         analyticsAPI.getInputCost(),
-        analyticsAPI.getYieldAnalytics(selectedFarmId),
-        farmAPI.getAllFarms(),
+        analyticsAPI.getYieldAnalytics(farmId),
       ]);
 
       let liveActive = false;
@@ -46,9 +54,6 @@ export default function YieldAnalytics() {
       if (yieldRes.status === 'fulfilled' && yieldRes.value) {
         setYieldData(yieldRes.value);
         liveActive = true;
-      }
-      if (farmRes.status === 'fulfilled' && Array.isArray(farmRes.value) && farmRes.value.length > 0) {
-        setFarms(farmRes.value);
       }
       setIsLive(liveActive);
     } catch (err) {
@@ -84,7 +89,7 @@ export default function YieldAnalytics() {
               >
                 {farms.map((f) => (
                   <option key={f.id} value={f.id}>
-                    {f.farmName || f.name || `Farm #${f.id}`}
+                    {f.name || f.farmName || `Farm #${f.id}`} ({f.district} — {f.area || f.totalAreaAcres} ac)
                   </option>
                 ))}
               </select>

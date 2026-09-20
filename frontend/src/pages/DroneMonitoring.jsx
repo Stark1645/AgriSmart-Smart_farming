@@ -4,7 +4,8 @@ import { LineChart, Line, AreaChart, Area, ComposedChart, CartesianGrid, XAxis, 
 import { MdFlight, MdCamera, MdAirplanemodeActive, MdVideocam, MdLayers } from 'react-icons/md';
 import { FiCheck, FiPlus, FiEye, FiMapPin, FiCalendar, FiUser } from 'react-icons/fi';
 import StatusBadge from '../components/StatusBadge';
-import { mockDrone, mockFarms } from '../services/mockData';
+import { mockDrone } from '../services/mockData';
+import { useApp } from '../context/AppContext';
 import styles from '../styles/PageShared.module.css';
 
 const fadeUp = { hidden: { opacity: 0, y: 20 }, visible: (i = 0) => ({ opacity: 1, y: 0, transition: { delay: i * 0.06, duration: 0.4 } }) };
@@ -73,7 +74,12 @@ const DRONE_GALLERY = [
 ];
 
 export default function DroneMonitoring() {
-  const [flights, setFlights] = useState(mockDrone.flights);
+  const { farms } = useApp();
+  const [flights, setFlights] = useState(() => [
+    { id: 1, date: '2026-07-12', area: 'Green Valley Farm (Coimbatore)', duration: '45 min', coverage: 12.5, ndvi: 0.72, status: 'Completed', pilot: 'Amrik Singh' },
+    { id: 2, date: '2026-07-10', area: 'Sunrise Acres (Tiruppur)', duration: '22 min', coverage: 20.0, ndvi: 0.68, status: 'Completed', pilot: 'Vikram Rao' },
+    { id: 3, date: '2026-07-08', area: 'GOD Valley Aurafarm (Coimbatore)', duration: '65 min', coverage: 25.0, ndvi: 0.81, status: 'Completed', pilot: 'Autonomous AI Grid' },
+  ]);
   const [showFlightModal, setShowFlightModal] = useState(false);
   const [selectedGallery, setSelectedGallery] = useState(null);
   const [toast, setToast] = useState('');
@@ -87,6 +93,33 @@ export default function DroneMonitoring() {
     gimbalPitch: -45,
   });
   const [modalViewMode, setModalViewMode] = useState('rgb'); // 'rgb' | 'ndvi'
+
+  const [flightForm, setFlightForm] = useState(() => {
+    const defaultFarm = farms && farms.length > 0 ? farms[0] : null;
+    return {
+      area: defaultFarm ? `${defaultFarm.name} (${defaultFarm.district})` : 'Green Valley Farm (Coimbatore)',
+      date: new Date().toISOString().split('T')[0],
+      duration: '25 min',
+      coverage: defaultFarm ? String(defaultFarm.area) : '12.5',
+      pilot: 'Amrik Singh',
+      altitude: '120m AGL',
+      sensor: 'Multispectral RedEdge',
+    };
+  });
+
+  // Sync default flightForm with first live farm once farms are loaded
+  useEffect(() => {
+    if (farms && farms.length > 0) {
+      const match = farms.find(f => `${f.name} (${f.district})` === flightForm.area || f.name === flightForm.area);
+      if (!match) {
+        setFlightForm(prev => ({
+          ...prev,
+          area: `${farms[0].name} (${farms[0].district})`,
+          coverage: String(farms[0].area),
+        }));
+      }
+    }
+  }, [farms]);
 
   useEffect(() => {
     if (viewMode !== 'live') return;
@@ -108,16 +141,6 @@ export default function DroneMonitoring() {
     showToastMsg(`High-Res 4K Frame captured at ${telemetry.altitude}m AGL (${telemetry.speed} km/h). Logged to surveillance records.`);
   };
 
-  const [flightForm, setFlightForm] = useState({
-    area: 'Green Valley — Block B',
-    date: new Date().toISOString().split('T')[0],
-    duration: '25 min',
-    coverage: '35',
-    pilot: 'Amrik Singh',
-    altitude: '120m AGL',
-    sensor: 'Multispectral RedEdge',
-  });
-
   const showToastMsg = (msg) => {
     setToast(msg);
     setTimeout(() => setToast(''), 3000);
@@ -138,7 +161,7 @@ export default function DroneMonitoring() {
 
     setFlights(prev => [newFlight, ...prev]);
     setShowFlightModal(false);
-    showToastMsg(`Drone flight mission scheduled for ${newFlight.area}!`);
+    showToastMsg(`Drone flight mission scheduled for ${newFlight.area} (${newFlight.coverage} acres)!`);
   };
 
   const totalCovered = flights.reduce((a, f) => a + (Number(f.coverage) || 0), 0);
@@ -444,8 +467,24 @@ export default function DroneMonitoring() {
             <form onSubmit={handleScheduleFlight} className={styles.modalBody}>
               <div className="form-group">
                 <label className="form-label">Flight Target Area *</label>
-                <select className="form-select" value={flightForm.area} onChange={e => setFlightForm({ ...flightForm, area: e.target.value })}>
-                  {mockFarms.map(f => <option key={f.id} value={`${f.name} — ${f.district}`}>{f.name} ({f.district})</option>)}
+                <select
+                  className="form-select"
+                  value={flightForm.area}
+                  onChange={e => {
+                    const selectedVal = e.target.value;
+                    const matched = farms.find(f => `${f.name} (${f.district})` === selectedVal || f.name === selectedVal);
+                    setFlightForm({
+                      ...flightForm,
+                      area: selectedVal,
+                      coverage: matched ? String(matched.area) : flightForm.coverage,
+                    });
+                  }}
+                >
+                  {farms.map(f => (
+                    <option key={f.id} value={`${f.name} (${f.district})`}>
+                      {f.name} ({f.district}) — {f.area} acres
+                    </option>
+                  ))}
                 </select>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
@@ -455,7 +494,13 @@ export default function DroneMonitoring() {
                 </div>
                 <div className="form-group">
                   <label className="form-label">Coverage (acres)</label>
-                  <input className="form-input" type="number" value={flightForm.coverage} onChange={e => setFlightForm({ ...flightForm, coverage: e.target.value })} />
+                  <input
+                    className="form-input"
+                    type="number"
+                    step="0.01"
+                    value={flightForm.coverage}
+                    onChange={e => setFlightForm({ ...flightForm, coverage: e.target.value })}
+                  />
                 </div>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
