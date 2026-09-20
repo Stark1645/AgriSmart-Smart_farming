@@ -57,8 +57,10 @@ export default function Reports() {
 
   const handleExport = (format) => {
     if (format === 'Export PDF') {
-      window.print();
-      showToastMsg('Print/PDF document dialog opened.');
+      showToastMsg('Preparing clean PDF report document...');
+      setTimeout(() => {
+        window.print();
+      }, 300);
       return;
     }
 
@@ -83,7 +85,7 @@ export default function Reports() {
       <AnimatePresence>
         {toast && (
           <motion.div
-            className={styles.toastBanner}
+            className={`${styles.toastBanner} no-print`}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
@@ -94,7 +96,7 @@ export default function Reports() {
         )}
       </AnimatePresence>
 
-      <motion.div className="page-header" initial="hidden" animate="visible" variants={fadeUp}>
+      <motion.div className="page-header no-print" initial="hidden" animate="visible" variants={fadeUp}>
         <div>
           <h1 className="page-title">Reports</h1>
           <p className="page-subtitle">Generate, filter and export farm performance reports</p>
@@ -102,7 +104,7 @@ export default function Reports() {
       </motion.div>
 
       {/* Filters & Export */}
-      <motion.div className="card page-section" initial="hidden" animate="visible" variants={fadeUp}>
+      <motion.div className="card page-section no-print" initial="hidden" animate="visible" variants={fadeUp}>
         <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'flex-end' }}>
           <div className="form-group">
             <label className="form-label">Report Type</label>
@@ -147,7 +149,7 @@ export default function Reports() {
       </motion.div>
 
       {/* Export Buttons */}
-      <motion.div className="card page-section" initial="hidden" animate="visible" variants={fadeUp}>
+      <motion.div className="card page-section no-print" initial="hidden" animate="visible" variants={fadeUp}>
         <div className="section-header">
           <h3 className="section-title">Export Options</h3>
         </div>
@@ -175,6 +177,66 @@ export default function Reports() {
           ))}
         </div>
       </motion.div>
+
+      {/* Official Printable Report Header & KPIs (Only visible during print/PDF export) */}
+      <div className="print-only" style={{ display: 'none', marginBottom: 20 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '2.5px solid #2d7a3a', paddingBottom: 12 }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: 24 }}>🌾</span>
+              <h1 style={{ fontSize: 22, fontWeight: 800, color: '#1b5e20', margin: 0, fontFamily: 'sans-serif' }}>
+                AgriSmart Farm Intelligence
+              </h1>
+            </div>
+            <p style={{ fontSize: 12, color: '#4b5563', margin: '4px 0 0 0' }}>
+              Smart Farming & Precision Agriculture Management System — Performance Audit
+            </p>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <span style={{ display: 'inline-block', background: '#e8f5e9', color: '#1b5e20', fontWeight: 800, fontSize: 11, padding: '3px 8px', borderRadius: 4, textTransform: 'uppercase' }}>
+              Official Export
+            </span>
+            <div style={{ fontSize: 11, color: '#6b7280', marginTop: 4 }}>
+              Generated: {new Date().toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' })}
+            </div>
+          </div>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginTop: 12, background: '#f9fafb', padding: 10, borderRadius: 6, border: '1px solid #e5e7eb', fontSize: 11 }}>
+          <div><strong>Target Farm:</strong> {selectedFarm}</div>
+          <div><strong>Report Type:</strong> <span style={{ textTransform: 'capitalize' }}>{reportType} Analytics</span></div>
+          <div><strong>Period:</strong> {dateFrom} → {dateTo}</div>
+          <div><strong>Dataset:</strong> {reportData.length} Months Tracked</div>
+        </div>
+
+        {/* Printable Summary KPIs */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginTop: 12 }}>
+          <div style={{ border: '1px solid #e5e7eb', borderRadius: 6, padding: '8px 12px', background: '#fff' }}>
+            <div style={{ fontSize: 10, color: '#6b7280', textTransform: 'uppercase', fontWeight: 700 }}>Total Yield</div>
+            <div style={{ fontSize: 16, fontWeight: 800, color: '#1b5e20' }}>
+              {(reportData.reduce((a, d) => a + (d.yield || 0), 0)).toLocaleString()} kg
+            </div>
+          </div>
+          <div style={{ border: '1px solid #e5e7eb', borderRadius: 6, padding: '8px 12px', background: '#fff' }}>
+            <div style={{ fontSize: 10, color: '#6b7280', textTransform: 'uppercase', fontWeight: 700 }}>Gross Revenue</div>
+            <div style={{ fontSize: 16, fontWeight: 800, color: '#0369a1' }}>
+              INR {(reportData.reduce((a, d) => a + (d.revenue || 0), 0)).toLocaleString()}
+            </div>
+          </div>
+          <div style={{ border: '1px solid #e5e7eb', borderRadius: 6, padding: '8px 12px', background: '#fff' }}>
+            <div style={{ fontSize: 10, color: '#6b7280', textTransform: 'uppercase', fontWeight: 700 }}>Total Expenses</div>
+            <div style={{ fontSize: 16, fontWeight: 800, color: '#b91c1c' }}>
+              INR {(reportData.reduce((a, d) => a + (d.expenses || 0), 0)).toLocaleString()}
+            </div>
+          </div>
+          <div style={{ border: '1px solid #e5e7eb', borderRadius: 6, padding: '8px 12px', background: '#fff' }}>
+            <div style={{ fontSize: 10, color: '#6b7280', textTransform: 'uppercase', fontWeight: 700 }}>Net Profit</div>
+            <div style={{ fontSize: 16, fontWeight: 800, color: '#15803d' }}>
+              INR {(reportData.reduce((a, d) => a + (d.profit || 0), 0)).toLocaleString()}
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Report Preview Charts */}
       <div className="charts-grid page-section">

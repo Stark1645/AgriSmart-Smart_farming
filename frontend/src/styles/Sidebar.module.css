@@ -214,3 +214,11 @@
   .sidebar { width: var(--sidebar-width); }
   .overlay { display: block; }
 }
+
+@media print {
+  .sidebar,
+  .overlay {
+    display: none !important;
+  }
+}
+

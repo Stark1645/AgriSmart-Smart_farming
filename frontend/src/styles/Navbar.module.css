@@ -253,3 +253,10 @@
   .brandName { display: none; }
   .navbar { padding: 0 16px; }
 }
+
+@media print {
+  .navbar {
+    display: none !important;
+  }
+}
+
