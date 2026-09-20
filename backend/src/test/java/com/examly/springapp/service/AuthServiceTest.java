@@ -105,4 +105,28 @@ public class AuthServiceTest {
         assertTrue(jwtUtils.validateToken(token));
         assertEquals("john-doe-farmer@test.org", jwtUtils.getEmailFromToken(token));
     }
+
+    @Test
+    void testRegisterUserWithInvalidNameThrowsException() {
+        User invalid = new User();
+        invalid.setName("Farmer123!@#");
+        invalid.setEmail("invalid@agrismart.in");
+        invalid.setPhoneNumber("9876543210");
+
+        assertThrows(com.examly.springapp.exception.InvalidNameException.class, () -> {
+            authService.registerUser(invalid);
+        });
+    }
+
+    @Test
+    void testRegisterUserWithInvalidPhoneThrowsException() {
+        User invalid = new User();
+        invalid.setName("Valid Name");
+        invalid.setEmail("invalidphone@agrismart.in");
+        invalid.setPhoneNumber("123");
+
+        assertThrows(com.examly.springapp.exception.InvalidPhoneException.class, () -> {
+            authService.registerUser(invalid);
+        });
+    }
 }

@@ -19,6 +19,12 @@ public class CropSeasonController {
     @Autowired
     private CropSeasonService cropSeasonService;
 
+    @Operation(summary = "Get All Crop Seasons")
+    @GetMapping("/crop-seasons")
+    public ResponseEntity<List<CropSeason>> getAllCropSeasons() {
+        return ResponseEntity.ok(cropSeasonService.getAllCropSeasons());
+    }
+
     @Operation(summary = "Get Crop Season By ID")
     @GetMapping("/crop-seasons/{id}")
     public ResponseEntity<CropSeason> getCropSeasonById(@PathVariable Long id) {
@@ -36,5 +42,18 @@ public class CropSeasonController {
     public ResponseEntity<CropSeason> createCropSeason(@RequestBody CropSeason cropSeason) {
         CropSeason created = cropSeasonService.createCropSeason(cropSeason);
         return new ResponseEntity<>(created, HttpStatus.CREATED);
+    }
+
+    @Operation(summary = "Update Crop Season")
+    @PutMapping("/crop-seasons/{id}")
+    public ResponseEntity<CropSeason> updateCropSeason(@PathVariable Long id, @RequestBody CropSeason cropSeason) {
+        return ResponseEntity.ok(cropSeasonService.updateCropSeason(id, cropSeason));
+    }
+
+    @Operation(summary = "Delete Crop Season")
+    @DeleteMapping("/crop-seasons/{id}")
+    public ResponseEntity<Void> deleteCropSeason(@PathVariable Long id) {
+        cropSeasonService.deleteCropSeason(id);
+        return ResponseEntity.noContent().build();
     }
 }

@@ -93,6 +93,16 @@ export const farmAPI = {
     const res = await api.post('/farms', farmData);
     return res.data;
   },
+  // PUT /api/farms/:id
+  updateFarm: async (id, farmData) => {
+    const res = await api.put(`/farms/${id}`, farmData);
+    return res.data;
+  },
+  // DELETE /api/farms/:id
+  deleteFarm: async (id) => {
+    const res = await api.delete(`/farms/${id}`);
+    return res.data;
+  },
 };
 
 // ==========================================
@@ -115,6 +125,11 @@ export const sensorAPI = {
 // 4. Crop Season Management (CropSeasonController)
 // ==========================================
 export const cropAPI = {
+  // GET /api/crop-seasons
+  getAllCropSeasons: async () => {
+    const res = await api.get('/crop-seasons');
+    return res.data;
+  },
   // GET /api/crop-seasons/:id
   getCropSeasonById: async (id) => {
     const res = await api.get(`/crop-seasons/${id}`);
@@ -128,6 +143,16 @@ export const cropAPI = {
   // POST /api/crop-seasons
   createCropSeason: async (seasonData) => {
     const res = await api.post('/crop-seasons', seasonData);
+    return res.data;
+  },
+  // PUT /api/crop-seasons/:id
+  updateCropSeason: async (id, seasonData) => {
+    const res = await api.put(`/crop-seasons/${id}`, seasonData);
+    return res.data;
+  },
+  // DELETE /api/crop-seasons/:id
+  deleteCropSeason: async (id) => {
+    const res = await api.delete(`/crop-seasons/${id}`);
     return res.data;
   },
 };

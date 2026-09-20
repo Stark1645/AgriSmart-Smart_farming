@@ -35,15 +35,15 @@ public class AuthService {
             user.setPasswordHash(passwordEncoder.encode(user.getPasswordHash().trim()));
         }
 
-        // Clean name to alphabetic characters and spaces
+        // Validate name to alphabetic characters and spaces
         if (user.getName() != null) {
             user.setName(user.getName().trim());
         }
-        if (user.getName() == null || !user.getName().matches("^[A-Za-z\\s]+$")) {
-            user.setName("Farmer");
+        if (user.getName() == null || user.getName().isEmpty() || !user.getName().matches("^[A-Za-z\\s]+$")) {
+            throw new InvalidNameException("Invalid name. Name must contain alphabetic characters and spaces only.");
         }
 
-        // Clean phone number to 10 digits
+        // Validate and clean phone number to 10 digits
         if (user.getPhoneNumber() != null) {
             String cleanPhone = user.getPhoneNumber().replaceAll("[^0-9]", "");
             if (cleanPhone.length() >= 10) {
@@ -52,7 +52,7 @@ public class AuthService {
             user.setPhoneNumber(cleanPhone);
         }
         if (user.getPhoneNumber() == null || !user.getPhoneNumber().matches("^\\d{10}$")) {
-            user.setPhoneNumber("9876543210");
+            throw new InvalidPhoneException("Invalid phone number. Phone number must be exactly 10 digits.");
         }
 
         if (userRepository.existsByEmail(user.getEmail())) {

@@ -32,8 +32,13 @@ public class FarmService {
 
     public Farm createFarm(Farm farm) {
         if (farm.getFarmName() == null || farm.getFarmName().trim().isEmpty()) {
-            farm.setFarmName("Smart Green Farm");
+            throw new InvalidNameException("Farm name cannot be empty");
         }
+        if (farmRepository.existsByFarmName(farm.getFarmName().trim())) {
+            throw new DuplicateFarmException("Farm with name '" + farm.getFarmName().trim() + "' already exists");
+        }
+        farm.setFarmName(farm.getFarmName().trim());
+
         if (farm.getDistrict() == null || farm.getDistrict().trim().isEmpty()) {
             farm.setDistrict("Ludhiana");
         }
@@ -48,10 +53,43 @@ public class FarmService {
             farm.setFarmerId(firstUser != null ? firstUser.getId() : 1L);
         }
 
-        if (farmRepository.existsByFarmName(farm.getFarmName())) {
-            farm.setFarmName(farm.getFarmName() + " " + (farmRepository.count() + 1));
-        }
-
         return farmRepository.save(farm);
+    }
+
+    public Farm updateFarm(Long id, Farm updated) {
+        Farm existing = getFarmById(id);
+        if (updated.getFarmName() != null && !updated.getFarmName().trim().isEmpty()) {
+            String newName = updated.getFarmName().trim();
+            if (!newName.equalsIgnoreCase(existing.getFarmName()) && farmRepository.existsByFarmName(newName)) {
+                throw new DuplicateFarmException("Farm with name '" + newName + "' already exists");
+            }
+            existing.setFarmName(newName);
+        }
+        if (updated.getDistrict() != null && !updated.getDistrict().trim().isEmpty()) {
+            existing.setDistrict(updated.getDistrict().trim());
+        }
+        if (updated.getTotalAreaAcres() != null) {
+            existing.setTotalAreaAcres(updated.getTotalAreaAcres());
+        }
+        if (updated.getSoilType() != null && !updated.getSoilType().trim().isEmpty()) {
+            existing.setSoilType(updated.getSoilType().trim());
+        }
+        if (updated.getLat() != null) {
+            existing.setLat(updated.getLat());
+        }
+        if (updated.getLng() != null) {
+            existing.setLng(updated.getLng());
+        }
+        if (updated.getStatus() != null && !updated.getStatus().trim().isEmpty()) {
+            existing.setStatus(updated.getStatus().trim());
+        }
+        return farmRepository.save(existing);
+    }
+
+    public void deleteFarm(Long id) {
+        if (!farmRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Farm with ID " + id + " not found");
+        }
+        farmRepository.deleteById(id);
     }
 }

@@ -36,4 +36,17 @@ public class FarmController {
         Farm created = farmService.createFarm(farm);
         return new ResponseEntity<>(created, HttpStatus.CREATED);
     }
+
+    @Operation(summary = "Update Farm")
+    @PutMapping("/farms/{id}")
+    public ResponseEntity<Farm> updateFarm(@PathVariable Long id, @RequestBody Farm farm) {
+        return ResponseEntity.ok(farmService.updateFarm(id, farm));
+    }
+
+    @Operation(summary = "Delete Farm")
+    @DeleteMapping("/farms/{id}")
+    public ResponseEntity<Void> deleteFarm(@PathVariable Long id) {
+        farmService.deleteFarm(id);
+        return ResponseEntity.noContent().build();
+    }
 }

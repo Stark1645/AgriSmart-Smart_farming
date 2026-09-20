@@ -23,12 +23,14 @@ public class RecommendationService {
             r1.setCropSeasonId(seasonId);
             r1.setRecommendationType("FERTILISER");
             r1.setRecommendedQuantity("Urea 25 kg/acre");
+            r1.setRecommendedDate(java.time.LocalDate.now());
             r1.setStatus("PENDING");
 
             InputRecommendation r2 = new InputRecommendation();
             r2.setCropSeasonId(seasonId);
             r2.setRecommendationType("IRRIGATION");
             r2.setRecommendedQuantity("Drip 15mm water");
+            r2.setRecommendedDate(java.time.LocalDate.now());
             r2.setStatus("PENDING");
 
             return List.of(r1, r2);
