@@ -14,12 +14,19 @@ export default function Navbar({ isDashboard = false }) {
   const { user, isAuthenticated, logout, toggleSidebar, toggleTheme, theme, notifications } = useApp();
   const [profileOpen, setProfileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
 
   const handleLogout = () => {
     logout();
-    navigate('/');
+    navigate('/login');
     setProfileOpen(false);
+  };
+
+  const handleSearchKeyDown = (e) => {
+    if (e.key === 'Enter' && searchQuery.trim()) {
+      navigate('/farm');
+    }
   };
 
   return (
@@ -35,7 +42,7 @@ export default function Navbar({ isDashboard = false }) {
             <FiMenu size={20} />
           </button>
         )}
-        <Link to="/" className={styles.brand}>
+        <Link to="/" className={styles.brand} title="Smart Farming and Precision Agriculture Management System">
           <div className={styles.logo}>
             <MdGrass size={22} />
           </div>
@@ -47,7 +54,7 @@ export default function Navbar({ isDashboard = false }) {
             <Link to="/login" className={styles.navLink}>Login</Link>
             <Link to="/register" className={styles.navLink}>Register</Link>
             {isAuthenticated && <Link to="/dashboard" className={styles.navLink}>Dashboard</Link>}
-            {isAuthenticated && <Link to="/farm-management" className={styles.navLink}>My Farm</Link>}
+            {isAuthenticated && <Link to="/farm" className={styles.navLink}>My Farm</Link>}
           </div>
         )}
       </div>
@@ -56,7 +63,12 @@ export default function Navbar({ isDashboard = false }) {
         {isDashboard && (
           <div className={`${styles.searchBar} ${searchOpen ? styles.searchOpen : ''}`}>
             <FiSearch size={16} />
-            <input placeholder="Search farms, crops, sensors…" />
+            <input
+              placeholder="Search farms, crops, sensors…"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              onKeyDown={handleSearchKeyDown}
+            />
           </div>
         )}
 

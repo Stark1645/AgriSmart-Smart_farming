@@ -96,7 +96,7 @@ export default function Reports() {
               <XAxis dataKey="month" tick={{ fontSize: 11, fill: 'var(--text-muted)' }} />
               <YAxis tick={{ fontSize: 11, fill: 'var(--text-muted)' }} />
               <Tooltip contentStyle={{ borderRadius: 8, border: '1px solid var(--border)', fontSize: 12 }} />
-              <Bar dataKey="yield" fill="var(--primary)" radius={[6,6,0,0]} name="Yield (kg)" />
+              <Bar dataKey="yield" fill="var(--primary)" radius={[6, 6, 0, 0]} name="Yield (kg)" />
             </BarChart>
           </ResponsiveContainer>
         </motion.div>
@@ -110,7 +110,7 @@ export default function Reports() {
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border-light)" />
               <XAxis dataKey="month" tick={{ fontSize: 11, fill: 'var(--text-muted)' }} />
               <YAxis tick={{ fontSize: 11, fill: 'var(--text-muted)' }} />
-              <Tooltip formatter={v => `₹ ${(v/1000).toFixed(0)}K`} contentStyle={{ borderRadius: 8, border: '1px solid var(--border)', fontSize: 12 }} />
+              <Tooltip formatter={v => `₹ ${(v / 1000).toFixed(0)}K`} contentStyle={{ borderRadius: 8, border: '1px solid var(--border)', fontSize: 12 }} />
               <Line type="monotone" dataKey="revenue" stroke="var(--success)" strokeWidth={2} name="Revenue" />
               <Line type="monotone" dataKey="profit" stroke="var(--accent)" strokeWidth={2} name="Profit" strokeDasharray="5 5" />
               <Line type="monotone" dataKey="expenses" stroke="var(--danger)" strokeWidth={2} name="Expenses" />

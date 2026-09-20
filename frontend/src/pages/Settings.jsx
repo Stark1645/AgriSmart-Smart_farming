@@ -105,21 +105,24 @@ export default function Settings() {
             <label className="form-label">Language</label>
             <select className="form-select" value={language} onChange={e => setLanguage(e.target.value)}>
               <option value="en">English</option>
-              <option value="si">සිංහල (Sinhala)</option>
+              <option value="hi">हिन्दी (Hindi)</option>
+              <option value="pa">ਪੰਜਾਬੀ (Punjabi)</option>
               <option value="ta">தமிழ் (Tamil)</option>
+              <option value="te">తెలుగు (Telugu)</option>
+              <option value="mr">मराठी (Marathi)</option>
             </select>
           </div>
           <div className="form-group">
             <label className="form-label">Timezone</label>
             <select className="form-select">
-              <option>Asia/Colombo (IST +5:30)</option>
+              <option>Asia/Kolkata (IST +5:30)</option>
               <option>UTC</option>
             </select>
           </div>
           <div className="form-group">
             <label className="form-label">Units</label>
             <select className="form-select">
-              <option>Metric (kg, hectares, °C)</option>
+              <option>Metric (kg, quintals, acres, °C)</option>
               <option>Imperial (lbs, acres, °F)</option>
             </select>
           </div>

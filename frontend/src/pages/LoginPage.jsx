@@ -8,8 +8,8 @@ import { useApp } from '../context/AppContext';
 import styles from '../styles/AuthPage.module.css';
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('kamal@agrismart.lk');
-  const [password, setPassword] = useState('password123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPw, setShowPw] = useState(false);
   const [remember, setRemember] = useState(false);
   const [error, setError] = useState('');
@@ -22,15 +22,18 @@ export default function LoginPage() {
     if (!email || !password) { setError('Please fill in all fields.'); return; }
     setLoading(true);
     setError('');
-    // Simulate API call
-    await new Promise(r => setTimeout(r, 1200));
-    const ok = login(email, password);
-    if (ok) {
-      navigate('/dashboard');
-    } else {
-      setError('Invalid credentials. Please try again.');
+    try {
+      const ok = await login(email, password);
+      if (ok) {
+        navigate('/dashboard');
+      } else {
+        setError('Invalid credentials. Please try again.');
+      }
+    } catch (err) {
+      setError('Login failed. Please check your credentials.');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (

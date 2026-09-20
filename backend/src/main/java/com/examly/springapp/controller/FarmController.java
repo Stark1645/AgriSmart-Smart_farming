@@ -1,5 +1,4 @@
 package com.examly.springapp.controller;
-
 import com.examly.springapp.model.Farm;
 import com.examly.springapp.service.FarmService;
 import io.swagger.v3.oas.annotations.Operation;

@@ -115,9 +115,9 @@ export default function MarketPrices() {
               <YAxis tick={{ fontSize: 11, fill: 'var(--text-muted)' }} />
               <Tooltip contentStyle={{ borderRadius: 8, border: '1px solid var(--border)', fontSize: 12 }} />
               <Legend />
-              <Bar dataKey="rice" fill="#2d7a3a" radius={[4,4,0,0]} name="Rice" />
-              <Bar dataKey="tomato" fill="#e53935" radius={[4,4,0,0]} name="Tomato" />
-              <Bar dataKey="chilli" fill="#fb8c00" radius={[4,4,0,0]} name="Chilli" />
+              <Bar dataKey="rice" fill="#2d7a3a" radius={[4, 4, 0, 0]} name="Rice" />
+              <Bar dataKey="tomato" fill="#e53935" radius={[4, 4, 0, 0]} name="Tomato" />
+              <Bar dataKey="chilli" fill="#fb8c00" radius={[4, 4, 0, 0]} name="Chilli" />
             </BarChart>
           </ResponsiveContainer>
         </motion.div>

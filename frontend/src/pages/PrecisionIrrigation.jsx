@@ -8,8 +8,22 @@ import { mockIrrigation, mockSensorData } from '../services/mockData';
 const fadeUp = { hidden: { opacity: 0, y: 20 }, visible: (i = 0) => ({ opacity: 1, y: 0, transition: { delay: i * 0.06, duration: 0.4 } }) };
 
 export default function PrecisionIrrigation() {
-  const [activeZone, setActiveZone] = useState(null);
+  const [zones, setZones] = useState(mockIrrigation.schedule);
   const moisture = mockSensorData.current.soilMoisture;
+
+  const toggleZone = (id) => {
+    setZones(prev => prev.map(z => {
+      if (z.id === id) {
+        const isRunning = z.status === 'Running';
+        return {
+          ...z,
+          status: isRunning ? 'Scheduled' : 'Running',
+          moisture: isRunning ? z.moisture : Math.min(100, z.moisture + 15),
+        };
+      }
+      return z;
+    }));
+  };
 
   return (
     <div>
@@ -63,11 +77,11 @@ export default function PrecisionIrrigation() {
         <motion.div className="card" initial="hidden" animate="visible" variants={fadeUp}>
           <div className="section-header">
             <h3 className="section-title">Irrigation Schedule</h3>
-            <span className="badge badge-info"><MdSchedule size={12} /> 4 zones</span>
+            <span className="badge badge-info"><MdSchedule size={12} /> {zones.length} zones</span>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            {mockIrrigation.schedule.map((zone, i) => (
-              <div key={zone.id} style={{ padding: 14, background: 'var(--bg-secondary)', borderRadius: 'var(--radius-md)', border: `1.5px solid ${activeZone === zone.id ? 'var(--primary)' : 'var(--border-light)'}`, transition: 'all 0.2s' }}>
+            {zones.map((zone) => (
+              <div key={zone.id} style={{ padding: 14, background: 'var(--bg-secondary)', borderRadius: 'var(--radius-md)', border: `1.5px solid ${zone.status === 'Running' ? 'var(--primary)' : 'var(--border-light)'}`, transition: 'all 0.2s' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
                   <div>
                     <div style={{ fontWeight: 700, fontSize: 13 }}>{zone.zone}</div>
@@ -76,12 +90,12 @@ export default function PrecisionIrrigation() {
                   <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
                     <StatusBadge status={zone.status} />
                     {zone.status !== 'Running' ? (
-                      <button className="btn btn-primary btn-sm" onClick={() => setActiveZone(zone.id)}>
-                        <MdPlayArrow size={14} /> Start
+                      <button className="btn btn-primary btn-sm" onClick={() => toggleZone(zone.id)}>
+                        <MdPlayArrow size={14} /> Start Valve
                       </button>
                     ) : (
-                      <button className="btn btn-danger btn-sm" onClick={() => setActiveZone(null)}>
-                        <MdStop size={14} /> Stop
+                      <button className="btn btn-danger btn-sm" onClick={() => toggleZone(zone.id)}>
+                        <MdStop size={14} /> Stop Valve
                       </button>
                     )}
                   </div>
@@ -109,7 +123,7 @@ export default function PrecisionIrrigation() {
               <XAxis dataKey="day" tick={{ fontSize: 12, fill: 'var(--text-muted)' }} />
               <YAxis tick={{ fontSize: 12, fill: 'var(--text-muted)' }} unit="L" />
               <Tooltip contentStyle={{ borderRadius: 8, border: '1px solid var(--border)', fontSize: 12 }} />
-              <Bar dataKey="usage" fill="var(--accent)" radius={[6,6,0,0]} name="Water Used (L)" />
+              <Bar dataKey="usage" fill="var(--accent)" radius={[6, 6, 0, 0]} name="Water Used (L)" />
             </BarChart>
           </ResponsiveContainer>
         </motion.div>

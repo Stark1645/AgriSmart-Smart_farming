@@ -41,6 +41,7 @@ export default function App() {
         {/* Dashboard Routes — Protected */}
         <Route element={<DashboardLayout />}>
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/farm" element={<FarmManagement />} />
           <Route path="/farm-management" element={<FarmManagement />} />
           <Route path="/crop-planning" element={<CropPlanning />} />
           <Route path="/iot-sensors" element={<IoTSensors />} />

@@ -14,13 +14,13 @@ export default function Footer() {
               <span>AgriSmart</span>
             </div>
             <p className={styles.brandDesc}>
-              Empowering Indian farmers with AI-driven precision agriculture,
-              IoT sensors, and real-time analytics for sustainable food production.
+              Smart Farming and Precision Agriculture Management System.
+              Empowering farmers with IoT sensor integration, AI disease detection, and yield analytics.
             </p>
             <div className={styles.socials}>
-              <a href="#" className={styles.socialLink}><FiGithub size={16} /></a>
-              <a href="mailto:info@agrismart.in" className={styles.socialLink}><FiMail size={16} /></a>
-              <a href="tel:+91112345678" className={styles.socialLink}><FiPhone size={16} /></a>
+              <a href="#" className={styles.socialLink} title="GitHub"><FiGithub size={16} /></a>
+              <a href="mailto:support@agrismart.in" className={styles.socialLink} title="Email"><FiMail size={16} /></a>
+              <a href="tel:+91112345678" className={styles.socialLink} title="Phone"><FiPhone size={16} /></a>
             </div>
           </div>
 
@@ -28,36 +28,38 @@ export default function Footer() {
             <h4>Platform</h4>
             <ul>
               <li><Link to="/dashboard">Dashboard</Link></li>
-              <li><Link to="/farm-management">Farm Management</Link></li>
+              <li><Link to="/farm">My Farm</Link></li>
+              <li><Link to="/crop-planning">Crop Planning</Link></li>
               <li><Link to="/iot-sensors">IoT Sensors</Link></li>
-              <li><Link to="/irrigation">Irrigation</Link></li>
+              <li><Link to="/irrigation">Precision Irrigation</Link></li>
             </ul>
           </div>
 
           <div className={styles.linkGroup}>
-            <h4>Tools</h4>
+            <h4>Tools & Advisory</h4>
             <ul>
-              <li><Link to="/pest-detection">Pest Detection</Link></li>
-              <li><Link to="/drone-monitoring">Drone Monitoring</Link></li>
-              <li><Link to="/market-prices">Market Prices</Link></li>
-              <li><Link to="/reports">Reports</Link></li>
+              <li><Link to="/fertilizer">Fertilizer Advisory</Link></li>
+              <li><Link to="/pest-detection">Pest & Disease AI</Link></li>
+              <li><Link to="/drone-monitoring">Drone Surveillance</Link></li>
+              <li><Link to="/market-prices">Mandi Prices</Link></li>
+              <li><Link to="/reports">Reports & Exports</Link></li>
             </ul>
           </div>
 
           <div className={styles.linkGroup}>
-            <h4>Support</h4>
+            <h4>Support & Legal</h4>
             <ul>
               <li><a href="#">Documentation</a></li>
-              <li><a href="#">Contact Us</a></li>
-              <li><a href="#">Indian Council of Agricultural Research</a></li>
               <li><a href="#">Privacy Policy</a></li>
+              <li><a href="#">Terms of Service</a></li>
+              <li><a href="#">Support & ICAR Guidelines</a></li>
             </ul>
           </div>
         </div>
 
         <div className={styles.footerBottom}>
-          <p>© 2026 AgriSmart. University Application Development Project — India.</p>
-          <p className={styles.built}>Built with React.js | Precision Agriculture Platform</p>
+          <p>© 2024 Smart Farming and Precision Agriculture Management System. All rights reserved.</p>
+          <p className={styles.built}>Built with Spring Boot & React.js | Precision Agriculture Platform</p>
         </div>
       </div>
     </footer>

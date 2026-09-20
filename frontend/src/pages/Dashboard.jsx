@@ -241,7 +241,7 @@ export default function Dashboard() {
         <motion.div className={`card ${styles.weatherCard}`} initial="hidden" animate="visible" variants={fadeUp} custom={1}>
           <div className="section-header">
             <h3 className="section-title">Weather</h3>
-            <span className="badge badge-info">Colombo</span>
+            <span className="badge badge-info">{user?.district ? `${user.district}` : 'Ludhiana, Punjab'}</span>
           </div>
           <div className={styles.weatherCurrent}>
             <div className={styles.weatherBig}>

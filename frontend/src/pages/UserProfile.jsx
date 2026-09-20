@@ -8,12 +8,28 @@ import { getInitials } from '../utils/helpers';
 const fadeUp = { hidden: { opacity: 0, y: 20 }, visible: (i = 0) => ({ opacity: 1, y: 0, transition: { delay: i * 0.06, duration: 0.4 } }) };
 
 export default function UserProfile() {
-  const { user } = useApp();
+  const { user, updateUserProfile } = useApp();
   const [tab, setTab] = useState('personal');
   const [saved, setSaved] = useState(false);
+  const [profileForm, setProfileForm] = useState({
+    name: user?.name || '',
+    email: user?.email || '',
+    phone: user?.phone || '+91 98765 43210',
+    role: user?.role || 'Farmer',
+    district: user?.district || 'Ludhiana',
+    farmName: user?.farmName || 'Green Valley Farm',
+    area: user?.area || '45.5 acres',
+    soilType: user?.soilType || 'Loamy',
+    gps: user?.gps || '30.9010° N, 75.8573° E',
+  });
+
+  const handleFieldChange = (key, val) => {
+    setProfileForm(f => ({ ...f, [key]: val }));
+  };
 
   const handleSave = async () => {
-    await new Promise(r => setTimeout(r, 800));
+    await new Promise(r => setTimeout(r, 600));
+    updateUserProfile(profileForm);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };
@@ -89,26 +105,26 @@ export default function UserProfile() {
                   <label className="form-label">Full Name</label>
                   <div style={{ position: 'relative' }}>
                     <FiUser size={15} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-                    <input className="form-input" style={{ paddingLeft: 36 }} defaultValue={user?.name} />
+                    <input className="form-input" style={{ paddingLeft: 36 }} value={profileForm.name} onChange={e => handleFieldChange('name', e.target.value)} />
                   </div>
                 </div>
                 <div className="form-group">
                   <label className="form-label">Email Address</label>
                   <div style={{ position: 'relative' }}>
                     <FiMail size={15} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-                    <input className="form-input" style={{ paddingLeft: 36 }} defaultValue={user?.email} />
+                    <input className="form-input" style={{ paddingLeft: 36 }} value={profileForm.email} onChange={e => handleFieldChange('email', e.target.value)} />
                   </div>
                 </div>
                 <div className="form-group">
                   <label className="form-label">Phone Number</label>
                   <div style={{ position: 'relative' }}>
                     <FiPhone size={15} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-                    <input className="form-input" style={{ paddingLeft: 36 }} defaultValue="+94 77 123 4567" />
+                    <input className="form-input" style={{ paddingLeft: 36 }} value={profileForm.phone} onChange={e => handleFieldChange('phone', e.target.value)} />
                   </div>
                 </div>
                 <div className="form-group">
                   <label className="form-label">Role</label>
-                  <select className="form-select" defaultValue={user?.role}>
+                  <select className="form-select" value={profileForm.role} onChange={e => handleFieldChange('role', e.target.value)}>
                     <option>Farmer</option>
                     <option>Field Officer</option>
                     <option>Agricultural Officer</option>
@@ -119,7 +135,7 @@ export default function UserProfile() {
                   <label className="form-label">District</label>
                   <div style={{ position: 'relative' }}>
                     <FiMapPin size={15} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-                    <input className="form-input" style={{ paddingLeft: 36 }} defaultValue="Colombo" />
+                    <input className="form-input" style={{ paddingLeft: 36 }} value={profileForm.district} onChange={e => handleFieldChange('district', e.target.value)} />
                   </div>
                 </div>
               </div>
@@ -129,16 +145,26 @@ export default function UserProfile() {
             <div>
               <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 20 }}>Farm Information</h3>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18 }}>
-                {[
-                  ['Farm Name', 'Green Valley Farm'], ['District', 'Colombo'],
-                  ['Total Area', '45.5 acres'], ['Soil Type', 'Loamy'],
-                  ['GPS Coordinates', '6.9271° N, 79.8612° E'],
-                ].map(([label, value]) => (
-                  <div key={label} className="form-group" style={label === 'GPS Coordinates' ? { gridColumn: '1 / -1' } : {}}>
-                    <label className="form-label">{label}</label>
-                    <input className="form-input" defaultValue={value} />
-                  </div>
-                ))}
+                <div className="form-group">
+                  <label className="form-label">Farm Name</label>
+                  <input className="form-input" value={profileForm.farmName} onChange={e => handleFieldChange('farmName', e.target.value)} />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">District</label>
+                  <input className="form-input" value={profileForm.district} onChange={e => handleFieldChange('district', e.target.value)} />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Total Area</label>
+                  <input className="form-input" value={profileForm.area} onChange={e => handleFieldChange('area', e.target.value)} />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Soil Type</label>
+                  <input className="form-input" value={profileForm.soilType} onChange={e => handleFieldChange('soilType', e.target.value)} />
+                </div>
+                <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                  <label className="form-label">GPS Coordinates</label>
+                  <input className="form-input" value={profileForm.gps} onChange={e => handleFieldChange('gps', e.target.value)} />
+                </div>
               </div>
             </div>
           )}

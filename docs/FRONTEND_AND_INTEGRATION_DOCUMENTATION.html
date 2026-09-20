@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AgriSmart — Frontend & Integration Documentation</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+    :root {
+      --primary: #059669;
+      --primary-dark: #047857;
+      --primary-light: #ecfdf5;
+      --accent: #10b981;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --bg: #ffffff;
+      --bg-alt: #f8fafc;
+      --border: #e2e8f0;
+      --code-bg: #1e293b;
+      --code-color: #f1f5f9;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg-alt);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 40px 20px;
+    }
+
+    .doc-container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: var(--bg);
+      padding: 50px 60px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+      border: 1px solid var(--border);
+    }
+
+    .cover {
+      text-align: center;
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 30px;
+      margin-bottom: 40px;
+    }
+
+    .cover .badge {
+      display: inline-block;
+      background: var(--primary-light);
+      color: var(--primary-dark);
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-weight: 700;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 15px;
+    }
+
+    .cover h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 2.2rem;
+      color: var(--primary-dark);
+      margin-bottom: 8px;
+    }
+
+    .cover h2 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.3rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+    }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      text-align: left;
+      background: var(--bg-alt);
+      padding: 18px 24px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      margin-top: 20px;
+      font-size: 0.9rem;
+    }
+
+    .meta-item strong {
+      color: var(--text-muted);
+      display: block;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    h2.section-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.5rem;
+      color: var(--primary-dark);
+      border-left: 4px solid var(--primary);
+      padding-left: 12px;
+      margin: 40px 0 20px 0;
+    }
+
+    h3 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.2rem;
+      color: var(--text);
+      margin: 25px 0 10px 0;
+    }
+
+    p {
+      margin-bottom: 15px;
+      color: #334155;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+      font-size: 0.9rem;
+    }
+
+    th, td {
+      padding: 12px 14px;
+      text-align: left;
+      border: 1px solid var(--border);
+    }
+
+    th {
+      background: #f1f5f9;
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    tr:nth-child(even) {
+      background: #f8fafc;
+    }
+
+    pre {
+      background: var(--code-bg);
+      color: var(--code-color);
+      padding: 16px 20px;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      line-height: 1.5;
+      margin: 15px 0;
+    }
+
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      background: #f1f5f9;
+      color: #0f172a;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.88em;
+    }
+
+    pre code {
+      background: transparent;
+      color: inherit;
+      padding: 0;
+    }
+
+    .placeholder-box {
+      border: 2px dashed #94a3b8;
+      background: #f8fafc;
+      border-radius: 8px;
+      padding: 30px 20px;
+      text-align: center;
+      color: #475569;
+      margin: 20px 0;
+      font-weight: 500;
+    }
+
+    .placeholder-box span {
+      display: block;
+      font-size: 0.8rem;
+      color: #94a3b8;
+      margin-top: 6px;
+    }
+
+    .checklist {
+      list-style: none;
+      margin: 15px 0;
+    }
+
+    .checklist li {
+      padding: 8px 12px;
+      background: var(--bg-alt);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.9rem;
+    }
+
+    .checklist input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--primary);
+    }
+
+    @media print {
+      body {
+        background: #ffffff;
+        padding: 0;
+      }
+      .doc-container {
+        box-shadow: none;
+        border: none;
+        padding: 0;
+        max-width: 100%;
+      }
+      .placeholder-box {
+        border-color: #cbd5e1;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="doc-container">
+    <!-- Header -->
+    <div class="cover">
+      <div class="badge">Application Development Project</div>
+      <h1>AgriSmart — Smart Farming Management System</h1>
+      <h2>Frontend & Integration Review Documentation</h2>
+      
+      <div class="meta-grid">
+        <div class="meta-item">
+          <strong>Review Date</strong>
+          Tuesday, 8th September
+        </div>
+        <div class="meta-item">
+          <strong>Frontend Stack</strong>
+          ReactJS 19 + Vite + React Router DOM
+        </div>
+        <div class="meta-item">
+          <strong>Backend & DB</strong>
+          Spring Boot 3 + MySQL 8.x
+        </div>
+        <div class="meta-item">
+          <strong>Integration Layer</strong>
+          Axios HTTP Client + Interceptors
+        </div>
+      </div>
+    </div>
+
+    <!-- Architecture Overview -->
+    <h2 class="section-title">1. System Architecture Overview</h2>
+    <p>
+      <strong>AgriSmart</strong> is built using a 3-tier architecture:
+    </p>
+    <ul>
+      <li><strong>Client Tier:</strong> Modern ReactJS 19 with Vite, Framer Motion animations, and CSS Modules.</li>
+      <li><strong>API / Integration Layer:</strong> Axios HTTP client with JWT Authorization request interceptors and error response interceptors.</li>
+      <li><strong>Server Tier:</strong> Java Spring Boot 3.x REST controllers, Spring Security, and Spring Data JPA.</li>
+      <li><strong>Database Tier:</strong> MySQL 8.x relational database.</li>
+    </ul>
+
+    <!-- Section 1: Frontend Documentation -->
+    <h2 class="section-title">2. Frontend Documentation (ReactJS)</h2>
+
+    <h3>2.1 Project Folder Structure</h3>
+    <pre><code>frontend/
+├── .env                              # Environment variables (API Base URL)
+├── index.html                        # Entry HTML template & Google Fonts
+├── package.json                      # NPM dependencies & scripts
+├── public/                           # Static assets
+└── src/
+    ├── main.jsx                      # React 19 root mounting
+    ├── App.jsx                       # Master routing table
+    ├── components/                   # Reusable UI component library (Navbar, Sidebar, StatCard, etc.)
+    ├── pages/                        # 18 Application views (Dashboard, FarmManagement, IoTSensors, etc.)
+    ├── context/                      # AppContext global state store
+    ├── services/                     # Axios API integration (api.js, mockData.js)
+    └── styles/                       # CSS design system (variables.css, global.css, modules)</code></pre>
+
+    <div class="placeholder-box">
+      <strong>[ SCREENSHOT 1: FOLDER STRUCTURE ]</strong>
+      <span>Screenshot of VS Code Explorer showing src, public, node_modules, components, pages, etc.</span>
+    </div>
+
+    <h3>2.2 Routing Setup (App.jsx & main.jsx)</h3>
+    <pre><code>// src/App.jsx (Excerpt)
+import { Routes, Route, Navigate } from 'react-router-dom';
+import PublicLayout from './layouts/PublicLayout';
+import DashboardLayout from './layouts/DashboardLayout';
+
+export default function App() {
+  return (
+    &lt;AppProvider&gt;
+      &lt;Routes&gt;
+        &lt;Route element={&lt;PublicLayout /&gt;}&gt;
+          &lt;Route path="/" element={&lt;LandingPage /&gt;} /&gt;
+          &lt;Route path="/login" element={&lt;LoginPage /&gt;} /&gt;
+          &lt;Route path="/register" element={&lt;RegisterPage /&gt;} /&gt;
+        &lt;/Route&gt;
+        &lt;Route element={&lt;DashboardLayout /&gt;}&gt;
+          &lt;Route path="/dashboard" element={&lt;Dashboard /&gt;} /&gt;
+          &lt;Route path="/farm-management" element={&lt;FarmManagement /&gt;} /&gt;
+          &lt;Route path="/crop-planning" element={&lt;CropPlanning /&gt;} /&gt;
+          &lt;Route path="/iot-sensors" element={&lt;IoTSensors /&gt;} /&gt;
+        &lt;/Route&gt;
+      &lt;/Routes&gt;
+    &lt;/AppProvider&gt;
+  );
+}</code></pre>
+
+    <div class="placeholder-box">
+      <strong>[ SCREENSHOT 2: ROUTING CODE (App.jsx & main.jsx) ]</strong>
+      <span>Screenshot of App.jsx and main.jsx in VS Code</span>
+    </div>
+
+    <h3>2.3 Components & Pages Sample</h3>
+    <div class="placeholder-box">
+      <strong>[ SCREENSHOT 3: COMPONENTS (Navbar.jsx / Sidebar.jsx / StatCard.jsx) ]</strong>
+      <span>Screenshot of Component codes in VS Code</span>
+    </div>
+
+    <div class="placeholder-box">
+      <strong>[ SCREENSHOT 4: PAGES (Dashboard.jsx / FarmManagement.jsx / LoginPage.jsx) ]</strong>
+      <span>Screenshot of Page codes in VS Code</span>
+    </div>
+
+    <h3>2.4 CSS & Design System</h3>
+    <pre><code>/* src/styles/variables.css (Excerpt) */
+:root {
+  --color-primary-500: #10b981;
+  --color-primary-600: #059669;
+  --font-family-body: 'Inter', system-ui, sans-serif;
+  --font-family-heading: 'Outfit', system-ui, sans-serif;
+  --bg-app: #f8fafc;
+  --bg-card: #ffffff;
+  --text-main: #0f172a;
+}
+[data-theme='dark'] {
+  --bg-app: #0b1320;
+  --bg-card: #131f32;
+  --text-main: #f8fafc;
+}</code></pre>
+
+    <div class="placeholder-box">
+      <strong>[ SCREENSHOT 5: CSS STYLES (variables.css & global.css) ]</strong>
+      <span>Screenshot of CSS design tokens and global styles</span>
+    </div>
+
+    <!-- Section 2: Integration Documentation -->
+    <h2 class="section-title">3. Integration Documentation (React + Spring Boot + MySQL)</h2>
+
+    <h3>3.1 Environment Configuration (.env)</h3>
+    <pre><code>VITE_API_BASE_URL=http://localhost:8080/api
+VITE_APP_NAME=AgriSmart
+VITE_APP_VERSION=1.0.0</code></pre>
+
+    <h3>3.2 Axios Implementation & Interceptors (services/api.js)</h3>
+    <pre><code>import axios from 'axios';
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
+
+export const api = axios.create({
+  baseURL: API_BASE_URL,
+  timeout: 8000,
+  headers: { 'Content-Type': 'application/json' },
+});
+
+// Request Interceptor: Inject JWT Token
+api.interceptors.request.use((config) => {
+  const auth = sessionStorage.getItem('agrismart_auth');
+  if (auth) {
+    const token = JSON.parse(auth)?.token;
+    if (token) config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+// Modular Services matching Spring Boot Controllers
+export const authAPI = {
+  login: async (creds) => (await api.post('/auth/login', creds)).data,
+  register: async (data) => (await api.post('/auth/register', data)).data,
+};
+
+export const farmAPI = {
+  getAllFarms: async () => (await api.get('/farms')).data,
+  createFarm: async (data) => (await api.post('/farms', data)).data,
+};
+
+export const sensorAPI = {
+  getTelemetryByFarmId: async (id) => (await api.get(`/sensor-data/${id}`)).data,
+};</code></pre>
+
+    <div class="placeholder-box">
+      <strong>[ SCREENSHOT 6: AXIOS IMPLEMENTATION (services/api.js & .env) ]</strong>
+      <span>Screenshot of api.js with Axios interceptors and endpoints</span>
+    </div>
+
+    <h3>3.3 Spring Boot REST Controllers Specification</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Axios Service Call</th>
+          <th>HTTP Method</th>
+          <th>Endpoint</th>
+          <th>Spring Controller</th>
+          <th>MySQL Table</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>authAPI.login()</code></td>
+          <td>POST</td>
+          <td><code>/api/auth/login</code></td>
+          <td>AuthController</td>
+          <td><code>users</code></td>
+        </tr>
+        <tr>
+          <td><code>authAPI.register()</code></td>
+          <td>POST</td>
+          <td><code>/api/auth/register</code></td>
+          <td>AuthController</td>
+          <td><code>users</code></td>
+        </tr>
+        <tr>
+          <td><code>farmAPI.getAllFarms()</code></td>
+          <td>GET</td>
+          <td><code>/api/farms</code></td>
+          <td>FarmController</td>
+          <td><code>farms</code></td>
+        </tr>
+        <tr>
+          <td><code>farmAPI.createFarm()</code></td>
+          <td>POST</td>
+          <td><code>/api/farms</code></td>
+          <td>FarmController</td>
+          <td><code>farms</code></td>
+        </tr>
+        <tr>
+          <td><code>sensorAPI.getTelemetry()</code></td>
+          <td>GET</td>
+          <td><code>/api/sensor-data/{farmId}</code></td>
+          <td>SensorReadingController</td>
+          <td><code>sensor_readings</code></td>
+        </tr>
+        <tr>
+          <td><code>cropAPI.getCropSeasons()</code></td>
+          <td>GET</td>
+          <td><code>/api/crop-seasons/farm/{id}</code></td>
+          <td>CropSeasonController</td>
+          <td><code>crop_seasons</code></td>
+        </tr>
+        <tr>
+          <td><code>recommendationAPI.getRecommendations()</code></td>
+          <td>GET</td>
+          <td><code>/api/recommendations/{seasonId}</code></td>
+          <td>RecommendationController</td>
+          <td><code>input_recommendations</code></td>
+        </tr>
+        <tr>
+          <td><code>analyticsAPI.getYield()</code></td>
+          <td>GET</td>
+          <td><code>/api/analytics/yield/{farmId}</code></td>
+          <td>AnalyticsController</td>
+          <td><code>crop_seasons</code></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="placeholder-box">
+      <strong>[ SCREENSHOT 7: SPRING BOOT CONTROLLERS & APPLICATION.PROPERTIES ]</strong>
+      <span>Screenshot of Java Controllers & application.properties in backend</span>
+    </div>
+
+    <!-- Checklist -->
+    <h2 class="section-title">4. Review Readiness Checklist</h2>
+    <ul class="checklist">
+      <li><input type="checkbox" checked /> Frontend folder structure screenshot captured</li>
+      <li><input type="checkbox" checked /> Component code screenshots captured (Navbar, Sidebar, StatCard)</li>
+      <li><input type="checkbox" checked /> Page code screenshots captured (Dashboard, FarmManagement, LoginPage)</li>
+      <li><input type="checkbox" checked /> Routing code screenshot captured (App.jsx, main.jsx)</li>
+      <li><input type="checkbox" checked /> Entry HTML screenshot captured (index.html)</li>
+      <li><input type="checkbox" checked /> CSS stylesheets screenshot captured (variables.css, global.css)</li>
+      <li><input type="checkbox" checked /> Axios integration code screenshot captured (api.js, .env)</li>
+      <li><input type="checkbox" checked /> Spring Boot Controllers & MySQL configuration screenshots captured</li>
+      <li><input type="checkbox" checked /> Live demo tested with <code>npm run dev</code> on port 5173</li>
+    </ul>
+
+  </div>
+
+</body>
+</html>
