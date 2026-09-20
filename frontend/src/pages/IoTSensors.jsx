@@ -1,10 +1,12 @@
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
-  LineChart, Line, AreaChart, Area, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend
+  LineChart, Line, AreaChart, Area, ComposedChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend
 } from 'recharts';
-import { MdSensors, MdBattery80 } from 'react-icons/md';
+import { MdSensors, MdBattery80, MdFilterList, MdCloudQueue } from 'react-icons/md';
 import StatusBadge from '../components/StatusBadge';
 import { mockSensorData } from '../services/mockData';
+import { sensorAPI, farmAPI } from '../services/api';
 import styles from '../styles/PageShared.module.css';
 
 const fadeUp = { hidden: { opacity: 0, y: 20 }, visible: (i = 0) => ({ opacity: 1, y: 0, transition: { delay: i * 0.06, duration: 0.4 } }) };
@@ -61,31 +63,143 @@ function GaugeCard({ sensor, value }) {
 }
 
 export default function IoTSensors() {
-  const { current, history, sensors } = mockSensorData;
+  const { current: defaultCurrent, history, sensors: defaultSensors } = mockSensorData;
+  const [current, setCurrent] = useState(defaultCurrent);
+  const [sensors, setSensors] = useState(defaultSensors);
+  const [farms, setFarms] = useState([]);
+  const [selectedFarmId, setSelectedFarmId] = useState(1);
+  const [weather, setWeather] = useState(null);
+  const [isLive, setIsLive] = useState(false);
+
+  useEffect(() => {
+    loadFarms();
+  }, []);
+
+  useEffect(() => {
+    loadSensorTelemetry(selectedFarmId);
+  }, [selectedFarmId]);
+
+  const loadFarms = async () => {
+    try {
+      const data = await farmAPI.getAllFarms();
+      if (Array.isArray(data) && data.length > 0) {
+        setFarms(data);
+        if (!selectedFarmId) setSelectedFarmId(data[0].id);
+      }
+    } catch (e) {
+      console.warn('Could not fetch farm list for sensors:', e);
+    }
+  };
+
+  const loadSensorTelemetry = async (farmId) => {
+    try {
+      const [readingsRes, weatherRes] = await Promise.allSettled([
+        sensorAPI.getTelemetryByFarmId(farmId),
+        sensorAPI.getWeatherByFarmId(farmId),
+      ]);
+
+      let liveActive = false;
+      let updatedCurrent = { ...defaultCurrent };
+
+      if (weatherRes.status === 'fulfilled' && weatherRes.value) {
+        setWeather(weatherRes.value);
+        if (weatherRes.value.temperature) updatedCurrent.temperature = weatherRes.value.temperature;
+        if (weatherRes.value.humidity) updatedCurrent.humidity = weatherRes.value.humidity;
+        if (weatherRes.value.rainfall_mm) updatedCurrent.rainfall = weatherRes.value.rainfall_mm;
+        liveActive = true;
+      }
+
+      if (readingsRes.status === 'fulfilled' && Array.isArray(readingsRes.value) && readingsRes.value.length > 0) {
+        liveActive = true;
+        const liveReadings = readingsRes.value;
+        liveReadings.forEach(r => {
+          const type = (r.sensorType || '').toLowerCase();
+          const val = Number(r.value);
+          if (type.includes('moist')) updatedCurrent.soilMoisture = val;
+          else if (type.includes('temp')) updatedCurrent.temperature = val;
+          else if (type.includes('humid')) updatedCurrent.humidity = val;
+          else if (type.includes('ph')) updatedCurrent.soilPH = val;
+          else if (type.includes('nitro')) updatedCurrent.nitrogen = val;
+          else if (type.includes('phos')) updatedCurrent.phosphorus = val;
+          else if (type.includes('potas')) updatedCurrent.potassium = val;
+        });
+
+        // Merge backend readings into sensor table
+        const liveSensors = liveReadings.map((r, idx) => ({
+          id: `SNS-LIVE-${r.id || idx + 1}`,
+          name: `${r.sensorType} Node`,
+          type: r.sensorType,
+          value: Number(r.value),
+          unit: r.unit || '',
+          location: `Plot #${r.farmId || farmId}`,
+          battery: 95,
+          status: r.alertTriggered ? 'Warning' : 'Online',
+        }));
+        setSensors([...liveSensors, ...defaultSensors.slice(liveSensors.length)]);
+      }
+
+      setCurrent(updatedCurrent);
+      setIsLive(liveActive);
+    } catch (e) {
+      console.warn('Backend sensor telemetry offline, using default sensor cache:', e);
+    }
+  };
 
   return (
     <div>
       <motion.div className="page-header" initial="hidden" animate="visible" variants={fadeUp}>
         <div>
           <h1 className="page-title">IoT Sensor Dashboard</h1>
-          <p className="page-subtitle">Real-time monitoring of all farm sensors</p>
+          <p className="page-subtitle">Real-time monitoring of all farm sensors & environmental telemetry</p>
         </div>
-        <div style={{ display: 'flex', gap: 10 }}>
-          <span className="badge badge-success">● 5 Online</span>
-          <span className="badge badge-danger">● 1 Offline</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          {farms.length > 0 && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--bg-card)', padding: '6px 12px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
+              <MdFilterList size={16} color="var(--text-muted)" />
+              <select
+                value={selectedFarmId}
+                onChange={(e) => setSelectedFarmId(Number(e.target.value))}
+                style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)', fontSize: 13, fontWeight: 600, outline: 'none', cursor: 'pointer' }}
+              >
+                {farms.map((f) => (
+                  <option key={f.id} value={f.id}>
+                    {f.farmName || f.name || `Farm #${f.id}`}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+          <span className={`badge ${isLive ? 'badge-success' : 'badge-primary'}`}>
+            {isLive ? '● Live Sensor Stream' : '● 5 Online'}
+          </span>
         </div>
       </motion.div>
+
+      {/* Weather Advisory Banner if available */}
+      {weather && (
+        <motion.div
+          initial="hidden" animate="visible" variants={fadeUp}
+          style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: '12px 18px', marginBottom: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <MdCloudQueue size={22} color="var(--info)" />
+            <span style={{ fontSize: 13, fontWeight: 600 }}>Local Microclimate Advisory:</span>
+            <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{weather.forecast} ({weather.condition || 'Partly Cloudy'})</span>
+          </div>
+          <span className="badge badge-info">{weather.temperature}°C · {weather.humidity}% Humidity</span>
+        </motion.div>
+      )}
 
       {/* Gauge Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }} className="page-section">
         {GAUGE_SENSORS.map((s, i) => (
           <motion.div key={s.key} custom={i} initial="hidden" animate="visible" variants={fadeUp}>
-            <GaugeCard sensor={s} value={current[s.key]} />
+            <GaugeCard sensor={s} value={current[s.key] ?? defaultCurrent[s.key]} />
           </motion.div>
         ))}
       </div>
 
-      {/* Line Charts */}
+      {/* Line & Composed Charts */}
       <div className="charts-grid page-section">
         <motion.div className="card" initial="hidden" animate="visible" variants={fadeUp}>
           <div className="section-header">
@@ -109,7 +223,7 @@ export default function IoTSensors() {
             <h3 className="section-title">24h — Humidity & Rainfall</h3>
           </div>
           <ResponsiveContainer width="100%" height={220}>
-            <AreaChart data={history.slice(-12)}>
+            <ComposedChart data={history.slice(-12)}>
               <defs>
                 <linearGradient id="humGrad" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#00897b" stopOpacity={0.15} />
@@ -123,7 +237,7 @@ export default function IoTSensors() {
               <Legend />
               <Area type="monotone" dataKey="humidity" stroke="#00897b" fill="url(#humGrad)" strokeWidth={2} name="Humidity %" />
               <Line type="monotone" dataKey="rainfall" stroke="#0288d1" strokeWidth={2} strokeDasharray="4 4" dot={false} name="Rainfall mm" />
-            </AreaChart>
+            </ComposedChart>
           </ResponsiveContainer>
         </motion.div>
       </div>

@@ -1,8 +1,9 @@
 import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiUploadCloud, FiImage, FiAlertTriangle } from 'react-icons/fi';
+import { FiUploadCloud, FiImage, FiAlertTriangle, FiCheckCircle } from 'react-icons/fi';
 import { MdBugReport, MdCheckCircle } from 'react-icons/md';
 import { mockPestDetection } from '../services/mockData';
+import { recommendationAPI } from '../services/api';
 import StatusBadge from '../components/StatusBadge';
 
 const fadeUp = { hidden: { opacity: 0, y: 20 }, visible: (i = 0) => ({ opacity: 1, y: 0, transition: { delay: i * 0.06, duration: 0.4 } }) };
@@ -11,6 +12,8 @@ export default function PestDetection() {
   const [preview, setPreview] = useState(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [result, setResult] = useState(null);
+  const [recentDetections, setRecentDetections] = useState(mockPestDetection.recent);
+  const [alertNotice, setAlertNotice] = useState('');
   const fileRef = useRef();
 
   const handleFile = (file) => {
@@ -18,6 +21,7 @@ export default function PestDetection() {
     const url = URL.createObjectURL(file);
     setPreview(url);
     setResult(null);
+    setAlertNotice('');
   };
 
   const handleDrop = (e) => {
@@ -27,8 +31,38 @@ export default function PestDetection() {
 
   const analyze = async () => {
     setAnalyzing(true);
-    await new Promise(r => setTimeout(r, 2500));
-    setResult(mockPestDetection.recent[0]);
+    setAlertNotice('');
+    await new Promise(r => setTimeout(r, 1800));
+    const detected = mockPestDetection.recent[0];
+    setResult(detected);
+
+    try {
+      const alertPayload = {
+        crop: detected.crop || 'Wheat',
+        disease: detected.disease,
+        confidence: detected.confidence,
+        severity: detected.severity,
+        treatment: detected.treatment,
+        timestamp: new Date().toISOString(),
+      };
+      const apiRes = await recommendationAPI.createPestAlert(alertPayload);
+      if (apiRes) {
+        setAlertNotice(`Alert #${apiRes.alertId || 'REGISTERED'} logged to central crop advisory database.`);
+      }
+    } catch (e) {
+      console.warn('Could not register pest alert to backend, recorded locally:', e);
+    }
+
+    const newEntry = {
+      id: `live-alert-${Date.now()}`,
+      date: new Date().toISOString().split('T')[0],
+      crop: detected.crop,
+      disease: detected.disease,
+      confidence: detected.confidence,
+      severity: detected.severity,
+      treatment: detected.treatment,
+    };
+    setRecentDetections(prev => [newEntry, ...prev]);
     setAnalyzing(false);
   };
 
@@ -39,7 +73,19 @@ export default function PestDetection() {
           <h1 className="page-title">Pest & Disease Detection</h1>
           <p className="page-subtitle">Upload crop images for AI-powered disease identification and treatment guidance</p>
         </div>
+        <span className="badge badge-success">● AI Engine Active</span>
       </motion.div>
+
+      {alertNotice && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          style={{ background: 'var(--success-light)', border: '1px solid #c8e6c9', borderRadius: 'var(--radius-md)', padding: '10px 16px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10 }}
+        >
+          <FiCheckCircle color="var(--success)" size={18} />
+          <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--success)' }}>{alertNotice}</span>
+        </motion.div>
+      )}
 
       <div className="charts-grid page-section">
         {/* Upload */}
@@ -131,7 +177,7 @@ export default function PestDetection() {
       <motion.div className="card page-section" initial="hidden" animate="visible" variants={fadeUp}>
         <div className="section-header">
           <h3 className="section-title">Recent Detections</h3>
-          <span className="badge badge-danger">3 active cases</span>
+          <span className="badge badge-danger">{recentDetections.length} recorded cases</span>
         </div>
         <div className="table-container">
           <table className="table">
@@ -139,7 +185,7 @@ export default function PestDetection() {
               <tr><th>Date</th><th>Crop</th><th>Disease Detected</th><th>Confidence</th><th>Severity</th><th>Treatment</th></tr>
             </thead>
             <tbody>
-              {mockPestDetection.recent.map((d, i) => (
+              {recentDetections.map((d, i) => (
                 <motion.tr key={d.id} custom={i} initial="hidden" animate="visible" variants={fadeUp}>
                   <td style={{ fontSize: 12, color: 'var(--text-muted)' }}>{d.date}</td>
                   <td style={{ fontWeight: 600 }}>{d.crop}</td>

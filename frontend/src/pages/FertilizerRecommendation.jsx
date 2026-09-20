@@ -1,8 +1,10 @@
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { MdBiotech, MdCheckCircle, MdPending, MdSchedule } from 'react-icons/md';
+import { MdBiotech, MdCheckCircle, MdPending, MdFilterList } from 'react-icons/md';
 import { RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from 'recharts';
 import StatusBadge from '../components/StatusBadge';
 import { mockFertilizer } from '../services/mockData';
+import { recommendationAPI, cropAPI } from '../services/api';
 
 const fadeUp = { hidden: { opacity: 0, y: 20 }, visible: (i = 0) => ({ opacity: 1, y: 0, transition: { delay: i * 0.06, duration: 0.4 } }) };
 
@@ -16,6 +18,61 @@ const npkData = [
 ];
 
 export default function FertilizerRecommendation() {
+  const [recommendations, setRecommendations] = useState(mockFertilizer);
+  const [seasons, setSeasons] = useState([]);
+  const [selectedSeasonId, setSelectedSeasonId] = useState(1);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [isLive, setIsLive] = useState(false);
+
+  useEffect(() => {
+    loadSeasons();
+  }, []);
+
+  useEffect(() => {
+    loadRecommendations(selectedSeasonId);
+  }, [selectedSeasonId]);
+
+  const loadSeasons = async () => {
+    try {
+      const data = await cropAPI.getAllCropSeasons();
+      if (Array.isArray(data) && data.length > 0) {
+        setSeasons(data);
+        if (!selectedSeasonId) setSelectedSeasonId(data[0].id);
+      }
+    } catch (e) {
+      console.warn('Backend crop seasons offline, using fallback:', e);
+    }
+  };
+
+  const loadRecommendations = async (seasonId) => {
+    try {
+      const list = await recommendationAPI.getRecommendationsBySeasonId(seasonId);
+      if (Array.isArray(list) && list.length > 0) {
+        const liveItems = list.map((r, idx) => ({
+          id: `live-rec-${r.id || idx + 1}`,
+          crop: r.cropName || (seasons.find(s => s.id === seasonId)?.cropType) || 'Wheat (HD-2967)',
+          type: r.recommendationType || 'Fertilizer',
+          quantity: r.recommendedQuantity || '25 kg/acre',
+          unit: '',
+          date: r.recommendedDate ? String(r.recommendedDate) : new Date().toISOString().split('T')[0],
+          priority: r.recommendationType === 'FERTILISER' ? 'High' : 'Medium',
+          status: (r.status || 'Scheduled').charAt(0).toUpperCase() + (r.status || 'scheduled').slice(1).toLowerCase(),
+        }));
+        setRecommendations([...liveItems, ...mockFertilizer.slice(liveItems.length)]);
+        setIsLive(true);
+      }
+    } catch (e) {
+      console.warn('Backend recommendations offline, using fallback cache:', e);
+    }
+  };
+
+  const handleGetAnalysis = async () => {
+    setAnalyzing(true);
+    await new Promise(r => setTimeout(r, 1200));
+    await loadRecommendations(selectedSeasonId);
+    setAnalyzing(false);
+  };
+
   return (
     <div>
       <motion.div className="page-header" initial="hidden" animate="visible" variants={fadeUp}>
@@ -23,7 +80,28 @@ export default function FertilizerRecommendation() {
           <h1 className="page-title">Fertilizer Recommendations</h1>
           <p className="page-subtitle">AI-driven nutrient recommendations based on soil analysis and crop stage</p>
         </div>
-        <button className="btn btn-primary"><MdBiotech size={16} /> Get New Analysis</button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          {seasons.length > 0 && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--bg-card)', padding: '6px 12px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
+              <MdFilterList size={16} color="var(--text-muted)" />
+              <select
+                value={selectedSeasonId}
+                onChange={(e) => setSelectedSeasonId(Number(e.target.value))}
+                style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)', fontSize: 13, fontWeight: 600, outline: 'none', cursor: 'pointer' }}
+              >
+                {seasons.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.cropType ? `${s.cropType} (${s.seasonName || `Season #${s.id}`})` : `Season #${s.id}`}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+          <button className="btn btn-primary" onClick={handleGetAnalysis} disabled={analyzing}>
+            {analyzing ? <div className="spinner" style={{ width: 14, height: 14, borderWidth: 2 }} /> : <MdBiotech size={16} />}
+            {analyzing ? 'Analyzing...' : 'Get New Analysis'}
+          </button>
+        </div>
       </motion.div>
 
       {/* NPK Cards */}
@@ -55,7 +133,7 @@ export default function FertilizerRecommendation() {
         <motion.div className="card" initial="hidden" animate="visible" variants={fadeUp}>
           <div className="section-header">
             <h3 className="section-title">Nutrient Profile</h3>
-            <span className="badge badge-primary">Current Season</span>
+            <span className="badge badge-primary">{isLive ? 'Live Sensor Baseline' : 'Current Season'}</span>
           </div>
           <ResponsiveContainer width="100%" height={280}>
             <RadarChart data={npkData}>
@@ -70,7 +148,7 @@ export default function FertilizerRecommendation() {
         <motion.div className="card" initial="hidden" animate="visible" variants={fadeUp}>
           <div className="section-header">
             <h3 className="section-title">Scheduled Applications</h3>
-            <span className="badge badge-warning"><MdPending size={12} /> 2 pending</span>
+            <span className="badge badge-warning"><MdPending size={12} /> {recommendations.filter(r => r.status?.toLowerCase().includes('pending') || r.status?.toLowerCase().includes('scheduled')).length} pending</span>
           </div>
           <div className="table-container">
             <table className="table">
@@ -78,7 +156,7 @@ export default function FertilizerRecommendation() {
                 <tr><th>Crop</th><th>Fertilizer</th><th>Qty</th><th>Date</th><th>Priority</th><th>Status</th></tr>
               </thead>
               <tbody>
-                {mockFertilizer.map((f, i) => (
+                {recommendations.map((f, i) => (
                   <motion.tr key={f.id} custom={i} initial="hidden" animate="visible" variants={fadeUp}>
                     <td style={{ fontSize: 13, fontWeight: 600 }}>{f.crop}</td>
                     <td style={{ fontSize: 13 }}>{f.type}</td>

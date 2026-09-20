@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   AreaChart, Area, BarChart, Bar, LineChart, Line,
@@ -5,17 +6,65 @@ import {
   CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend
 } from 'recharts';
 import { mockYieldData, mockSeasonalData, mockRadarData } from '../services/mockData';
+import { analyticsAPI, farmAPI } from '../services/api';
 import { formatCurrency } from '../utils/helpers';
 import StatCard from '../components/StatCard';
-import { MdBarChart, MdTrendingUp, MdAttachMoney, MdShowChart } from 'react-icons/md';
+import { MdBarChart, MdTrendingUp, MdAttachMoney, MdShowChart, MdFilterList } from 'react-icons/md';
 
 const fadeUp = { hidden: { opacity: 0, y: 20 }, visible: (i = 0) => ({ opacity: 1, y: 0, transition: { delay: i * 0.06, duration: 0.4 } }) };
 
 export default function YieldAnalytics() {
-  const totalRevenue = mockYieldData.reduce((a, d) => a + d.revenue, 0);
-  const totalExpenses = mockYieldData.reduce((a, d) => a + d.expenses, 0);
-  const totalProfit = mockYieldData.reduce((a, d) => a + d.profit, 0);
-  const totalYield = mockYieldData.reduce((a, d) => a + d.yield, 0);
+  const [profitability, setProfitability] = useState(null);
+  const [inputCost, setInputCost] = useState(null);
+  const [yieldData, setYieldData] = useState(null);
+  const [farms, setFarms] = useState([]);
+  const [selectedFarmId, setSelectedFarmId] = useState(1);
+  const [isLive, setIsLive] = useState(false);
+
+  useEffect(() => {
+    loadAnalytics();
+  }, [selectedFarmId]);
+
+  const loadAnalytics = async () => {
+    try {
+      const [profRes, costRes, yieldRes, farmRes] = await Promise.allSettled([
+        analyticsAPI.getProfitability(),
+        analyticsAPI.getInputCost(),
+        analyticsAPI.getYieldAnalytics(selectedFarmId),
+        farmAPI.getAllFarms(),
+      ]);
+
+      let liveActive = false;
+      if (profRes.status === 'fulfilled' && profRes.value) {
+        setProfitability(profRes.value);
+        liveActive = true;
+      }
+      if (costRes.status === 'fulfilled' && costRes.value) {
+        setInputCost(costRes.value);
+        liveActive = true;
+      }
+      if (yieldRes.status === 'fulfilled' && yieldRes.value) {
+        setYieldData(yieldRes.value);
+        liveActive = true;
+      }
+      if (farmRes.status === 'fulfilled' && Array.isArray(farmRes.value) && farmRes.value.length > 0) {
+        setFarms(farmRes.value);
+      }
+      setIsLive(liveActive);
+    } catch (err) {
+      console.warn('Backend analytics service unreachable, utilizing cached analytics:', err);
+    }
+  };
+
+  const defaultRev = mockYieldData.reduce((a, d) => a + d.revenue, 0);
+  const defaultExp = mockYieldData.reduce((a, d) => a + d.expenses, 0);
+  const defaultProf = mockYieldData.reduce((a, d) => a + d.profit, 0);
+  const defaultYld = mockYieldData.reduce((a, d) => a + d.yield, 0);
+
+  const totalRevenue = profitability?.gross_revenue_inr ?? defaultRev;
+  const totalExpenses = profitability?.total_input_cost_inr ?? inputCost?.total_input_cost_inr ?? defaultExp;
+  const totalProfit = profitability?.net_profit_inr ?? defaultProf;
+  const totalYield = yieldData?.total_expected_yield_kg ? Number(yieldData.total_expected_yield_kg) : defaultYld;
 
   return (
     <div>
@@ -24,16 +73,36 @@ export default function YieldAnalytics() {
           <h1 className="page-title">Yield Analytics</h1>
           <p className="page-subtitle">Comprehensive farm performance and financial analytics</p>
         </div>
-        <span className="badge badge-primary">Year 2026</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          {farms.length > 0 && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--bg-card)', padding: '6px 12px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
+              <MdFilterList size={16} color="var(--text-muted)" />
+              <select
+                value={selectedFarmId}
+                onChange={(e) => setSelectedFarmId(Number(e.target.value))}
+                style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)', fontSize: 13, fontWeight: 600, outline: 'none', cursor: 'pointer' }}
+              >
+                {farms.map((f) => (
+                  <option key={f.id} value={f.id}>
+                    {f.farmName || f.name || `Farm #${f.id}`}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+          <span className={`badge ${isLive ? 'badge-success' : 'badge-primary'}`}>
+            {isLive ? '● Live API Data' : 'Year 2026'}
+          </span>
+        </div>
       </motion.div>
 
       {/* Summary Stats */}
       <div className="stats-grid page-section">
         {[
-          { icon: MdBarChart, label: 'Total Yield', value: `${(totalYield/1000).toFixed(1)}T`, color: 'primary', trend: 14, trendUp: true },
-          { icon: MdAttachMoney, label: 'Total Revenue', value: `INR ${(totalRevenue/1000000).toFixed(1)}M`, color: 'success', trend: 18, trendUp: true },
-          { icon: MdTrendingUp, label: 'Total Expenses', value: `INR ${(totalExpenses/1000000).toFixed(1)}M`, color: 'warning', trend: 5, trendUp: false },
-          { icon: MdShowChart, label: 'Net Profit', value: `INR ${(totalProfit/1000000).toFixed(1)}M`, color: 'accent', trend: 22, trendUp: true },
+          { icon: MdBarChart, label: 'Total Yield', value: `${(totalYield / 1000).toFixed(1)}T`, color: 'primary', trend: 14, trendUp: true },
+          { icon: MdAttachMoney, label: 'Total Revenue', value: `INR ${(totalRevenue / 1000000).toFixed(1)}M`, color: 'success', trend: profitability?.profit_margin_percent ? Math.round(profitability.profit_margin_percent) : 18, trendUp: true },
+          { icon: MdTrendingUp, label: 'Total Expenses', value: `INR ${(totalExpenses / 1000000).toFixed(1)}M`, color: 'warning', trend: 5, trendUp: false },
+          { icon: MdShowChart, label: 'Net Profit', value: `INR ${(totalProfit / 1000000).toFixed(1)}M`, color: 'accent', trend: 22, trendUp: true },
         ].map((s, i) => (
           <motion.div key={s.label} custom={i} initial="hidden" animate="visible" variants={fadeUp}>
             <StatCard {...s} />
@@ -140,6 +209,41 @@ export default function YieldAnalytics() {
           </LineChart>
         </ResponsiveContainer>
       </motion.div>
+
+      {/* Input Cost Breakdown */}
+      {inputCost && (
+        <motion.div className="card page-section" initial="hidden" animate="visible" variants={fadeUp}>
+          <div className="section-header">
+            <h3 className="section-title">Input Cost Allocation</h3>
+            <span className="badge badge-warning">Total: INR {(inputCost.total_input_cost_inr || 120000).toLocaleString()}</span>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16 }}>
+            {[
+              { label: 'Fertilizer & Nutrients', val: inputCost.fertilizer_cost_inr || 45000, color: 'var(--primary)' },
+              { label: 'High-Yield Seeds', val: inputCost.seed_cost_inr || 28000, color: 'var(--accent)' },
+              { label: 'Drip & Irrigation', val: inputCost.irrigation_cost_inr || 15000, color: 'var(--info)' },
+              { label: 'Labor & Operations', val: inputCost.labour_cost_inr || 32000, color: 'var(--warning)' },
+            ].map((c) => {
+              const total = inputCost.total_input_cost_inr || 120000;
+              const pct = Math.round((c.val / total) * 100);
+              return (
+                <div key={c.label} style={{ background: 'var(--bg-secondary)', borderRadius: 'var(--radius-md)', padding: 14, border: '1px solid var(--border-light)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                    <span style={{ fontSize: 13, fontWeight: 600 }}>{c.label}</span>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: c.color }}>{pct}%</span>
+                  </div>
+                  <div style={{ fontSize: 18, fontWeight: 800, fontFamily: 'var(--font-heading)', marginBottom: 8 }}>
+                    ₹ {c.val.toLocaleString()}
+                  </div>
+                  <div className="progress-bar-track" style={{ height: 6 }}>
+                    <div className="progress-bar-fill" style={{ width: `${pct}%`, background: c.color }} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </motion.div>
+      )}
     </div>
   );
 }

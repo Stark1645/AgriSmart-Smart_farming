@@ -1,17 +1,46 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { LineChart, Line, BarChart, Bar, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { FiTrendingUp, FiTrendingDown, FiSearch } from 'react-icons/fi';
 import { mockMarketPrices, mockMarketTrends } from '../services/mockData';
+import { recommendationAPI } from '../services/api';
 
 const fadeUp = { hidden: { opacity: 0, y: 20 }, visible: (i = 0) => ({ opacity: 1, y: 0, transition: { delay: i * 0.06, duration: 0.4 } }) };
 
 export default function MarketPrices() {
+  const [prices, setPrices] = useState(mockMarketPrices);
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('All');
 
-  const categories = ['All', ...new Set(mockMarketPrices.map(p => p.category))];
-  const filtered = mockMarketPrices.filter(p =>
+  useEffect(() => {
+    loadPrices();
+  }, []);
+
+  const loadPrices = async () => {
+    try {
+      const data = await recommendationAPI.getMarketPrices();
+      if (data && data.length > 0) {
+        const liveItems = data.map((item, idx) => ({
+          id: `live-${idx}`,
+          crop: item.commodity || item.crop,
+          market: item.market || 'Regional Mandi',
+          price: item.price_per_quintal || item.price || 2000,
+          unit: item.unit || 'quintal',
+          change: item.change !== undefined ? item.change : (item.trend === 'UP' ? 15.0 : 0.0),
+          trend: (item.trend || 'up').toLowerCase(),
+          category: item.category || 'Cereals',
+        }));
+        const existingKeys = new Set(liveItems.map(p => `${p.crop}-${p.market}`.toLowerCase()));
+        const uniqueMocks = mockMarketPrices.filter(p => !existingKeys.has(`${p.crop}-${p.market}`.toLowerCase()));
+        setPrices([...liveItems, ...uniqueMocks]);
+      }
+    } catch (e) {
+      console.warn('Backend market prices unavailable, using local cache:', e);
+    }
+  };
+
+  const categories = ['All', ...new Set(prices.map(p => p.category))];
+  const filtered = prices.filter(p =>
     (category === 'All' || p.category === category) &&
     p.crop.toLowerCase().includes(search.toLowerCase())
   );
