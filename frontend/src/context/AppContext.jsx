@@ -108,7 +108,9 @@ export function AppProvider({ children }) {
       const registeredList = JSON.parse(localStorage.getItem('agrismart_registered_users') || '[]');
       const match = registeredList.find(u => u.email.toLowerCase() === email.toLowerCase());
       if (match) {
-        activeUser = match;
+        if (!match.password || match.password === password) {
+          activeUser = match;
+        }
       }
     } catch (e) {
       console.warn('Local check error:', e);
@@ -126,9 +128,13 @@ export function AppProvider({ children }) {
       }
     } catch (err) {
       console.warn('Backend login fallback to local session:', err);
+      // If backend explicitly rejected the credentials, fail the login
+      if (err.status === 401 || err.status === 403) {
+        return false;
+      }
     }
 
-    // If not found in registered list, create a personalized user from entered email
+    // If not found in registered list and backend is offline, create a personalized user for demo fallback
     if (!activeUser) {
       const namePart = email.split('@')[0].replace(/[._]/g, ' ');
       const formattedName = namePart.charAt(0).toUpperCase() + namePart.slice(1);

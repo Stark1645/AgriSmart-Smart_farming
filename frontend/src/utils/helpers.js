@@ -26,7 +26,12 @@ export const getStatusColor = (status) => {
 export const truncate = (str, len = 40) =>
   str.length > len ? str.slice(0, len) + '…' : str;
 
-export const getInitials = (name) =>
-  name.split(' ').map(p => p[0]).join('').slice(0, 2).toUpperCase();
+export const getInitials = (name) => {
+  if (!name || typeof name !== 'string') return 'U';
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return 'U';
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+};
 
 export const randomBetween = (min, max) => Math.random() * (max - min) + min;

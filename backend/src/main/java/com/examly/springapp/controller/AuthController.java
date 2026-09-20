@@ -41,7 +41,7 @@ public class AuthController {
 
     @Operation(summary = "Get Logged-in User Profile")
     @GetMapping("/users/profile")
-    public ResponseEntity<User> getProfile() {
-        return ResponseEntity.ok(authService.getProfile());
+    public ResponseEntity<User> getProfile(@RequestHeader(value = "Authorization", required = false) String authHeader) {
+        return ResponseEntity.ok(authService.getProfile(authHeader));
     }
 }

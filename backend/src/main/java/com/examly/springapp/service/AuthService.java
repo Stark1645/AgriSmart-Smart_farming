@@ -6,11 +6,14 @@ import com.examly.springapp.exception.ResourceNotFoundException;
 import com.examly.springapp.exception.UnauthorisedAccessException;
 import com.examly.springapp.model.User;
 import com.examly.springapp.repository.UserRepository;
+import com.examly.springapp.security.JwtUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 public class AuthService {
@@ -18,10 +21,18 @@ public class AuthService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private JwtUtils jwtUtils;
+
     public User registerUser(User user) {
-        // Handle passwordHash fallback
+        // Handle passwordHash fallback & hashing
         if (user.getPasswordHash() == null || user.getPasswordHash().trim().isEmpty()) {
-            user.setPasswordHash("defaultPassword123");
+            user.setPasswordHash(passwordEncoder.encode("defaultPassword123"));
+        } else if (!user.getPasswordHash().startsWith("$2a$") && !user.getPasswordHash().startsWith("$2b$") && !user.getPasswordHash().startsWith("$2y$")) {
+            user.setPasswordHash(passwordEncoder.encode(user.getPasswordHash().trim()));
         }
 
         // Clean name to alphabetic characters and spaces
@@ -56,10 +67,41 @@ public class AuthService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UnauthorisedAccessException("Invalid credentials. Please check your email and password."));
 
+        // Verify password against stored hash or fallback plain-text
+        boolean passwordValid = false;
+        if (password != null && user.getPasswordHash() != null) {
+            if (user.getPasswordHash().startsWith("$2a$") || user.getPasswordHash().startsWith("$2b$") || user.getPasswordHash().startsWith("$2y$")) {
+                passwordValid = passwordEncoder.matches(password, user.getPasswordHash());
+            } else {
+                passwordValid = user.getPasswordHash().equals(password);
+            }
+        }
+
+        if (!passwordValid) {
+            throw new UnauthorisedAccessException("Invalid credentials. Please check your email and password.");
+        }
+
         Map<String, Object> response = new HashMap<>();
-        response.put("token", "jwt-bearer-token-mock-for-" + user.getId());
+        String token = jwtUtils.generateToken(user.getEmail(), user.getRole());
+        response.put("token", token);
         response.put("user", user);
         return response;
+    }
+
+    public User getProfile(String authHeader) {
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7);
+            if (jwtUtils.validateToken(token)) {
+                String email = jwtUtils.getEmailFromToken(token);
+                if (email != null) {
+                    Optional<User> userOpt = userRepository.findByEmail(email);
+                    if (userOpt.isPresent()) {
+                        return userOpt.get();
+                    }
+                }
+            }
+        }
+        return getProfile();
     }
 
     public User getProfile() {
