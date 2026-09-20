@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { FiUser, FiMail, FiPhone, FiMapPin, FiLock, FiSave, FiCamera } from 'react-icons/fi';
 import { MdGrass, MdVerified } from 'react-icons/md';
@@ -9,8 +9,24 @@ const fadeUp = { hidden: { opacity: 0, y: 20 }, visible: (i = 0) => ({ opacity: 
 
 export default function UserProfile() {
   const { user, updateUserProfile } = useApp();
+  const fileInputRef = useRef(null);
+  const [avatarUrl, setAvatarUrl] = useState(user?.avatar || null);
+  const [avatarToast, setAvatarToast] = useState('');
   const [tab, setTab] = useState('personal');
   const [saved, setSaved] = useState(false);
+
+  const handleAvatarChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setAvatarUrl(event.target.result);
+        setAvatarToast('Profile photo updated successfully!');
+        setTimeout(() => setAvatarToast(''), 3000);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
   const [profileForm, setProfileForm] = useState({
     name: user?.name || '',
     email: user?.email || '',
@@ -92,13 +108,34 @@ export default function UserProfile() {
         <motion.div initial="hidden" animate="visible" variants={fadeUp}>
           <div className="card" style={{ textAlign: 'center', padding: 32 }}>
             <div style={{ position: 'relative', display: 'inline-block', marginBottom: 16 }}>
-              <div style={{ width: 88, height: 88, borderRadius: '50%', background: 'linear-gradient(135deg, var(--primary), var(--accent))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, fontWeight: 800, color: 'white', margin: '0 auto' }}>
-                {getInitials(user?.name || 'User')}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                style={{ display: 'none' }}
+                onChange={handleAvatarChange}
+              />
+              <div style={{ width: 88, height: 88, borderRadius: '50%', background: 'linear-gradient(135deg, var(--primary), var(--accent))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, fontWeight: 800, color: 'white', margin: '0 auto', overflow: 'hidden' }}>
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                  getInitials(user?.name || 'User')
+                )}
               </div>
-              <button style={{ position: 'absolute', bottom: 0, right: 0, width: 28, height: 28, borderRadius: '50%', background: 'var(--primary)', border: '2px solid white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+              <button
+                type="button"
+                title="Change profile photo"
+                onClick={() => fileInputRef.current?.click()}
+                style={{ position: 'absolute', bottom: 0, right: 0, width: 28, height: 28, borderRadius: '50%', background: 'var(--primary)', border: '2px solid white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+              >
                 <FiCamera size={12} color="white" />
               </button>
             </div>
+            {avatarToast && (
+              <div style={{ fontSize: 12, color: 'var(--primary)', fontWeight: 600, marginBottom: 8 }}>
+                {avatarToast}
+              </div>
+            )}
             <h3 style={{ fontSize: 18, fontWeight: 800, marginBottom: 4 }}>{user?.name}</h3>
             <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 8 }}>{user?.role}</p>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, marginBottom: 16 }}>

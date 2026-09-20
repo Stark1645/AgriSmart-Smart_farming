@@ -350,8 +350,9 @@ export default function FarmManagement() {
             <div
               key={farm.id}
               className={`${styles.mapPin} ${selected?.id === farm.id ? styles.mapPinActive : ''}`}
-              style={{ top: `${20 + (i % 4) * 16}%`, left: `${15 + Math.floor(i / 2) * 18}%` }}
-              title={farm.name}
+              style={{ top: `${20 + (i % 4) * 16}%`, left: `${15 + Math.floor(i / 2) * 18}%`, cursor: 'pointer' }}
+              title={`Click to view ${farm.name}`}
+              onClick={() => setSelected(farm)}
             >
               <MdLocationOn size={20} />
               <span className={styles.mapPinLabel}>{farm.name}</span>
