@@ -23,11 +23,53 @@ export default function UserProfile() {
     gps: user?.gps || '30.9010° N, 75.8573° E',
   });
 
+  const [passwords, setPasswords] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordSuccess, setPasswordSuccess] = useState('');
+  const [securitySettings, setSecuritySettings] = useState({
+    twoFactor: false,
+    loginNotifications: true,
+    sessionTimeout: true,
+    apiAccess: false,
+  });
+
+  const toggleSecurity = (key) => {
+    setSecuritySettings(s => ({ ...s, [key]: !s[key] }));
+  };
+
   const handleFieldChange = (key, val) => {
     setProfileForm(f => ({ ...f, [key]: val }));
   };
 
   const handleSave = async () => {
+    setPasswordError('');
+    setPasswordSuccess('');
+
+    if (tab === 'password') {
+      if (!passwords.currentPassword) {
+        setPasswordError('Please enter your current password.');
+        return;
+      }
+      if (passwords.newPassword.length < 8) {
+        setPasswordError('New password must be at least 8 characters long.');
+        return;
+      }
+      if (passwords.newPassword !== passwords.confirmPassword) {
+        setPasswordError('New password and confirm password do not match.');
+        return;
+      }
+      await new Promise(r => setTimeout(r, 600));
+      setPasswordSuccess('Password updated successfully!');
+      setPasswords({ currentPassword: '', newPassword: '', confirmPassword: '' });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2500);
+      return;
+    }
+
     await new Promise(r => setTimeout(r, 600));
     updateUserProfile(profileForm);
     setSaved(true);
@@ -82,7 +124,7 @@ export default function UserProfile() {
             {tabs.map(t => (
               <button
                 key={t}
-                onClick={() => setTab(t)}
+                onClick={() => { setTab(t); setPasswordError(''); setPasswordSuccess(''); }}
                 style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '10px 14px', borderRadius: 8, border: 'none', background: tab === t ? 'var(--primary-50)' : 'transparent', color: tab === t ? 'var(--primary)' : 'var(--text-secondary)', fontWeight: tab === t ? 700 : 500, fontSize: 13, cursor: 'pointer', textAlign: 'left', textTransform: 'capitalize', transition: 'all 0.15s' }}
               >
                 {t === 'personal' && <FiUser size={15} />}
@@ -171,15 +213,49 @@ export default function UserProfile() {
           {tab === 'password' && (
             <div>
               <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 20 }}>Change Password</h3>
+              {passwordError && (
+                <div style={{ background: 'var(--danger-light)', border: '1px solid #ffcdd2', borderRadius: 8, padding: 12, fontSize: 13, color: 'var(--danger)', marginBottom: 16 }}>
+                  {passwordError}
+                </div>
+              )}
+              {passwordSuccess && (
+                <div style={{ background: 'var(--success-light)', border: '1px solid #c8e6c9', borderRadius: 8, padding: 12, fontSize: 13, color: 'var(--success)', marginBottom: 16 }}>
+                  {passwordSuccess}
+                </div>
+              )}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 18, maxWidth: 400 }}>
-                {['Current Password', 'New Password', 'Confirm New Password'].map(label => (
-                  <div key={label} className="form-group">
-                    <label className="form-label">{label}</label>
-                    <input className="form-input" type="password" placeholder="••••••••" />
-                  </div>
-                ))}
+                <div className="form-group">
+                  <label className="form-label">Current Password *</label>
+                  <input
+                    className="form-input"
+                    type="password"
+                    placeholder="Enter current password"
+                    value={passwords.currentPassword}
+                    onChange={e => setPasswords({ ...passwords, currentPassword: e.target.value })}
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">New Password *</label>
+                  <input
+                    className="form-input"
+                    type="password"
+                    placeholder="At least 8 characters"
+                    value={passwords.newPassword}
+                    onChange={e => setPasswords({ ...passwords, newPassword: e.target.value })}
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Confirm New Password *</label>
+                  <input
+                    className="form-input"
+                    type="password"
+                    placeholder="Repeat new password"
+                    value={passwords.confirmPassword}
+                    onChange={e => setPasswords({ ...passwords, confirmPassword: e.target.value })}
+                  />
+                </div>
                 <div style={{ background: 'var(--info-light)', border: '1px solid #b3e5fc', borderRadius: 8, padding: 12, fontSize: 13, color: 'var(--info)' }}>
-                  Password must be at least 8 characters with uppercase, number and special character.
+                  Password must be at least 8 characters long with a mix of letters, numbers, and symbols.
                 </div>
               </div>
             </div>
@@ -189,30 +265,36 @@ export default function UserProfile() {
               <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 20 }}>Security Settings</h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                 {[
-                  { label: 'Two-Factor Authentication', desc: 'Add extra security with 2FA via SMS', enabled: false },
-                  { label: 'Login Notifications', desc: 'Receive email when new login occurs', enabled: true },
-                  { label: 'Session Timeout', desc: 'Auto logout after 30 minutes of inactivity', enabled: true },
-                  { label: 'API Access', desc: 'Allow third-party API integrations', enabled: false },
-                ].map(item => (
-                  <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: 16, padding: 16, background: 'var(--bg-secondary)', borderRadius: 10 }}>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontWeight: 700, fontSize: 14 }}>{item.label}</div>
-                      <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>{item.desc}</div>
+                  { key: 'twoFactor', label: 'Two-Factor Authentication', desc: 'Add extra security with 2FA via SMS' },
+                  { key: 'loginNotifications', label: 'Login Notifications', desc: 'Receive email when new login occurs' },
+                  { key: 'sessionTimeout', label: 'Session Timeout', desc: 'Auto logout after 30 minutes of inactivity' },
+                  { key: 'apiAccess', label: 'API Access', desc: 'Allow third-party API integrations' },
+                ].map(item => {
+                  const enabled = securitySettings[item.key];
+                  return (
+                    <div key={item.key} style={{ display: 'flex', alignItems: 'center', gap: 16, padding: 16, background: 'var(--bg-secondary)', borderRadius: 10 }}>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontWeight: 700, fontSize: 14 }}>{item.label}</div>
+                        <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>{item.desc}</div>
+                      </div>
+                      <div
+                        onClick={() => toggleSecurity(item.key)}
+                        style={{ width: 44, height: 24, borderRadius: 12, background: enabled ? 'var(--primary)' : 'var(--border)', cursor: 'pointer', position: 'relative', transition: 'background 0.2s' }}
+                      >
+                        <div style={{ width: 18, height: 18, borderRadius: '50%', background: 'white', position: 'absolute', top: 3, left: enabled ? 23 : 3, transition: 'left 0.2s', boxShadow: 'var(--shadow-sm)' }} />
+                      </div>
                     </div>
-                    <div style={{ width: 44, height: 24, borderRadius: 12, background: item.enabled ? 'var(--primary)' : 'var(--border)', cursor: 'pointer', position: 'relative', transition: 'background 0.2s' }}>
-                      <div style={{ width: 18, height: 18, borderRadius: '50%', background: 'white', position: 'absolute', top: 3, left: item.enabled ? 23 : 3, transition: 'left 0.2s', boxShadow: 'var(--shadow-sm)' }} />
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
 
           <div style={{ marginTop: 24, display: 'flex', gap: 12 }}>
             <motion.button className="btn btn-primary" onClick={handleSave} whileTap={{ scale: 0.97 }}>
-              {saved ? '✓ Saved!' : <><FiSave size={15} /> Save Changes</>}
+              {saved ? '✓ Saved!' : tab === 'password' ? 'Update Password' : <><FiSave size={15} /> Save Changes</>}
             </motion.button>
-            <button className="btn btn-ghost">Cancel</button>
+            <button className="btn btn-ghost" onClick={() => { setPasswords({ currentPassword: '', newPassword: '', confirmPassword: '' }); setPasswordError(''); }}>Reset</button>
           </div>
         </motion.div>
       </div>

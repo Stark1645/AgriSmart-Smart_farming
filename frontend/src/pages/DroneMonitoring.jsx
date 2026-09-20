@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LineChart, Line, AreaChart, Area, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, AreaChart, Area, ComposedChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { MdFlight, MdCamera, MdAirplanemodeActive } from 'react-icons/md';
 import { FiCheck, FiPlus, FiEye, FiMapPin, FiCalendar, FiUser } from 'react-icons/fi';
 import StatusBadge from '../components/StatusBadge';
@@ -142,7 +142,7 @@ export default function DroneMonitoring() {
             </div>
           </div>
           <ResponsiveContainer width="100%" height={260}>
-            <AreaChart data={mockDrone.ndviData}>
+            <ComposedChart data={mockDrone.ndviData}>
               <defs>
                 <linearGradient id="ndviGrad" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.2} />
@@ -155,7 +155,7 @@ export default function DroneMonitoring() {
               <Tooltip contentStyle={{ borderRadius: 8, border: '1px solid var(--border)', fontSize: 12 }} />
               <Area type="monotone" dataKey="ndvi" stroke="var(--primary)" fill="url(#ndviGrad)" strokeWidth={2} name="NDVI Index" />
               <Line type="monotone" dataKey="health" stroke="var(--accent)" strokeWidth={2} dot={false} name="Health Score %" />
-            </AreaChart>
+            </ComposedChart>
           </ResponsiveContainer>
         </motion.div>
       </div>

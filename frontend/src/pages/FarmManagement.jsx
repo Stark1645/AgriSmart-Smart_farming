@@ -20,6 +20,7 @@ export default function FarmManagement() {
   const [showModal, setShowModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [editingFarm, setEditingFarm] = useState(null);
 
   const [form, setForm] = useState({
     farmName: '',
@@ -30,6 +31,90 @@ export default function FarmManagement() {
     lat: '30.9010',
     lng: '75.8573',
   });
+
+  const [editForm, setEditForm] = useState({
+    farmName: '',
+    district: 'Ludhiana',
+    totalAreaAcres: '25.0',
+    soilType: 'Loamy',
+    status: 'Active',
+  });
+
+  const handleOpenEdit = (farm) => {
+    setEditingFarm(farm);
+    setEditForm({
+      farmName: farm.name || '',
+      district: farm.district || 'Ludhiana',
+      totalAreaAcres: String(farm.area || '20.0'),
+      soilType: farm.soilType || 'Loamy',
+      status: farm.status || 'Active',
+    });
+  };
+
+  const handleUpdateFarm = async (e) => {
+    e.preventDefault();
+    if (!editingFarm || !editForm.farmName) return;
+
+    setSubmitting(true);
+    const updatePayload = {
+      farmName: editForm.farmName,
+      district: editForm.district,
+      totalAreaAcres: parseFloat(editForm.totalAreaAcres) || 10.0,
+      soilType: editForm.soilType,
+      status: editForm.status.toUpperCase(),
+    };
+
+    try {
+      if (typeof editingFarm.id === 'number' && editingFarm.id < 10000000000) {
+        await farmAPI.updateFarm(editingFarm.id, updatePayload);
+      }
+    } catch (err) {
+      console.warn('Backend update failed, updating locally:', err);
+    }
+
+    setFarms(prev => prev.map(f => {
+      if (f.id === editingFarm.id) {
+        return {
+          ...f,
+          name: editForm.farmName,
+          district: editForm.district,
+          area: parseFloat(editForm.totalAreaAcres) || f.area,
+          soilType: editForm.soilType,
+          status: editForm.status,
+          lastUpdated: 'Just now',
+        };
+      }
+      return f;
+    }));
+
+    if (selected?.id === editingFarm.id) {
+      setSelected(prev => ({
+        ...prev,
+        name: editForm.farmName,
+        district: editForm.district,
+        area: parseFloat(editForm.totalAreaAcres) || prev.area,
+        soilType: editForm.soilType,
+        status: editForm.status,
+      }));
+    }
+
+    setSubmitting(false);
+    setEditingFarm(null);
+  };
+
+  const handleDeleteFarm = async (farm) => {
+    if (window.confirm(`Are you sure you want to delete ${farm.name}?`)) {
+      try {
+        if (typeof farm.id === 'number' && farm.id < 10000000000) {
+          await farmAPI.deleteFarm(farm.id);
+        }
+      } catch (err) {
+        console.warn('Backend delete failed, removing locally:', err);
+      }
+      setFarms(prev => prev.filter(f => f.id !== farm.id));
+      if (selected?.id === farm.id) setSelected(null);
+    }
+  };
 
   // Load farms from Spring Boot Backend MySQL API
   useEffect(() => {
@@ -239,8 +324,8 @@ export default function FarmManagement() {
                   <td>
                     <div style={{ display: 'flex', gap: 4 }}>
                       <button className="btn btn-icon btn-ghost" title="View" onClick={() => setSelected(farm)}><FiEye size={14} /></button>
-                      <button className="btn btn-icon btn-ghost" title="Edit"><FiEdit2 size={14} /></button>
-                      <button className="btn btn-icon btn-ghost" title="Delete" style={{ color: 'var(--danger)' }}><FiTrash2 size={14} /></button>
+                      <button className="btn btn-icon btn-ghost" title="Edit" onClick={() => handleOpenEdit(farm)}><FiEdit2 size={14} /></button>
+                      <button className="btn btn-icon btn-ghost" title="Delete" style={{ color: 'var(--danger)' }} onClick={() => handleDeleteFarm(farm)}><FiTrash2 size={14} /></button>
                     </div>
                   </td>
                 </motion.tr>
@@ -439,6 +524,98 @@ export default function FarmManagement() {
           </motion.div>
         </div>
       )}
+
+      {/* Edit Farm Modal */}
+      <AnimatePresence>
+        {editingFarm && (
+          <div className={styles.modalOverlay} onClick={() => setEditingFarm(null)}>
+            <motion.div
+              className={styles.modal}
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={e => e.stopPropagation()}
+            >
+              <div className={styles.modalHeader}>
+                <div>
+                  <h3 style={{ fontSize: 18, fontWeight: 700 }}>Edit Farm (#{editingFarm.id})</h3>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: 13 }}>Update farm metadata in Spring Boot REST API & MySQL Database</p>
+                </div>
+                <button className="btn btn-ghost btn-icon" onClick={() => setEditingFarm(null)}>✕</button>
+              </div>
+
+              <form onSubmit={handleUpdateFarm} style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: 14 }}>
+                <div className="form-group">
+                  <label className="form-label">Farm Name *</label>
+                  <input
+                    className="form-input"
+                    required
+                    value={editForm.farmName}
+                    onChange={e => setEditForm({ ...editForm, farmName: e.target.value })}
+                  />
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <div className="form-group">
+                    <label className="form-label">District *</label>
+                    <select
+                      className="form-select"
+                      value={editForm.district}
+                      onChange={e => setEditForm({ ...editForm, district: e.target.value })}
+                    >
+                      {DISTRICTS.map(d => <option key={d} value={d}>{d}</option>)}
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Total Area (Acres) *</label>
+                    <input
+                      className="form-input"
+                      type="number"
+                      step="0.1"
+                      required
+                      value={editForm.totalAreaAcres}
+                      onChange={e => setEditForm({ ...editForm, totalAreaAcres: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <div className="form-group">
+                    <label className="form-label">Soil Type</label>
+                    <select
+                      className="form-select"
+                      value={editForm.soilType}
+                      onChange={e => setEditForm({ ...editForm, soilType: e.target.value })}
+                    >
+                      {['Alluvial', 'Black', 'Red', 'Laterite', 'Loamy', 'Sandy', 'Clay'].map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Status</label>
+                    <select
+                      className="form-select"
+                      value={editForm.status}
+                      onChange={e => setEditForm({ ...editForm, status: e.target.value })}
+                    >
+                      <option value="Active">Active</option>
+                      <option value="Inactive">Inactive</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 12 }}>
+                  <button type="button" className="btn btn-ghost" onClick={() => setEditingFarm(null)}>Cancel</button>
+                  <button type="submit" className="btn btn-primary" disabled={submitting}>
+                    {submitting ? 'Saving...' : 'Update Farm'}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

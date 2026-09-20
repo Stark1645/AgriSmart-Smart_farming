@@ -1,8 +1,9 @@
-import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { FiSun, FiMoon, FiBell, FiLock, FiGlobe, FiShield } from 'react-icons/fi';
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FiSun, FiMoon, FiBell, FiLock, FiGlobe, FiShield, FiCheck } from 'react-icons/fi';
 import { MdNotifications, MdPrivacyTip, MdLanguage } from 'react-icons/md';
 import { useApp } from '../context/AppContext';
+import styles from '../styles/PageShared.module.css';
 
 const fadeUp = { hidden: { opacity: 0, y: 20 }, visible: (i = 0) => ({ opacity: 1, y: 0, transition: { delay: i * 0.06, duration: 0.4 } }) };
 
@@ -23,14 +24,72 @@ function ToggleSwitch({ enabled, onChange }) {
 
 export default function Settings() {
   const { theme, toggleTheme } = useApp();
-  const [settings, setSettings] = useState({
-    weatherAlerts: true, pestAlerts: true, irrigationAlerts: true, harvestReminders: true, marketPriceAlerts: false, systemNotifs: true,
-    shareData: false, analytics: true, emailMarketing: false,
-    twoFactor: false, sessionTimeout: true,
+  const [settings, setSettings] = useState(() => {
+    try {
+      const stored = localStorage.getItem('agrismart_settings');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed.settings) return parsed.settings;
+      }
+    } catch (e) {
+      console.warn('Could not read settings from localStorage:', e);
+    }
+    return {
+      weatherAlerts: true, pestAlerts: true, irrigationAlerts: true, harvestReminders: true, marketPriceAlerts: false, systemNotifs: true,
+      shareData: false, analytics: true, emailMarketing: false,
+      twoFactor: false, sessionTimeout: true,
+    };
   });
-  const [language, setLanguage] = useState('en');
+
+  const [language, setLanguage] = useState(() => {
+    try {
+      const stored = localStorage.getItem('agrismart_settings');
+      if (stored) return JSON.parse(stored).language || 'en';
+    } catch (e) {}
+    return 'en';
+  });
+
+  const [timezone, setTimezone] = useState(() => {
+    try {
+      const stored = localStorage.getItem('agrismart_settings');
+      if (stored) return JSON.parse(stored).timezone || 'Asia/Kolkata (IST +5:30)';
+    } catch (e) {}
+    return 'Asia/Kolkata (IST +5:30)';
+  });
+
+  const [units, setUnits] = useState(() => {
+    try {
+      const stored = localStorage.getItem('agrismart_settings');
+      if (stored) return JSON.parse(stored).units || 'Metric';
+    } catch (e) {}
+    return 'Metric';
+  });
+
+  const [saved, setSaved] = useState(false);
+  const [toast, setToast] = useState('');
 
   const toggle = (key) => setSettings(s => ({ ...s, [key]: !s[key] }));
+
+  const handleSaveAll = () => {
+    const payload = {
+      settings,
+      language,
+      timezone,
+      units,
+      updatedAt: new Date().toISOString(),
+    };
+    try {
+      localStorage.setItem('agrismart_settings', JSON.stringify(payload));
+    } catch (e) {
+      console.warn('Could not save to localStorage:', e);
+    }
+    setSaved(true);
+    setToast('All preferences and settings have been saved successfully!');
+    setTimeout(() => {
+      setSaved(false);
+      setToast('');
+    }, 2500);
+  };
 
   const sections = [
     {
@@ -114,16 +173,16 @@ export default function Settings() {
           </div>
           <div className="form-group">
             <label className="form-label">Timezone</label>
-            <select className="form-select">
-              <option>Asia/Kolkata (IST +5:30)</option>
-              <option>UTC</option>
+            <select className="form-select" value={timezone} onChange={e => setTimezone(e.target.value)}>
+              <option value="Asia/Kolkata (IST +5:30)">Asia/Kolkata (IST +5:30)</option>
+              <option value="UTC">UTC</option>
             </select>
           </div>
           <div className="form-group">
             <label className="form-label">Units</label>
-            <select className="form-select">
-              <option>Metric (kg, quintals, acres, °C)</option>
-              <option>Imperial (lbs, acres, °F)</option>
+            <select className="form-select" value={units} onChange={e => setUnits(e.target.value)}>
+              <option value="Metric">Metric (kg, quintals, acres, °C)</option>
+              <option value="Imperial">Imperial (lbs, acres, °F)</option>
             </select>
           </div>
         </div>
@@ -133,12 +192,29 @@ export default function Settings() {
 
   return (
     <div>
+      {/* Toast Banner */}
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            className={styles.toastBanner}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+          >
+            <FiCheck color="var(--primary)" size={18} />
+            <span>{toast}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <motion.div className="page-header" initial="hidden" animate="visible" variants={fadeUp}>
         <div>
           <h1 className="page-title">Settings</h1>
           <p className="page-subtitle">Customize your AgriSmart experience</p>
         </div>
-        <button className="btn btn-primary">Save All</button>
+        <button className="btn btn-primary" onClick={handleSaveAll}>
+          {saved ? '✓ Saved!' : 'Save All'}
+        </button>
       </motion.div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
