@@ -342,3 +342,92 @@
   margin-top: 6px;
   display: block;
 }
+
+/* ---- Drone Feed & Aerial HUD ---- */
+.droneFeedContainer {
+  height: 280px;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  position: relative;
+  background: #0f172a;
+}
+
+.droneFeedImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 10s ease;
+}
+
+.droneFeedHud {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 12px 14px;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.6) 0%, transparent 35%, transparent 65%, rgba(0, 0, 0, 0.75) 100%);
+  color: white;
+  pointer-events: none;
+}
+
+.droneFeedInteractive {
+  pointer-events: auto;
+}
+
+.droneScanline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent 0%, rgba(74, 222, 128, 0.4) 20%, #4ade80 50%, rgba(74, 222, 128, 0.4) 80%, transparent 100%);
+  box-shadow: 0 0 12px #4ade80;
+  animation: droneScan 3.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  pointer-events: none;
+}
+
+@keyframes droneScan {
+  0% { top: 0%; opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { top: 98%; opacity: 0; }
+}
+
+.liveRecDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ef4444;
+  display: inline-block;
+  animation: recBlink 1.2s ease-in-out infinite;
+  margin-right: 6px;
+}
+
+@keyframes recBlink {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.2; transform: scale(0.85); }
+}
+
+.droneReticle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 80px;
+  height: 80px;
+  border: 1.5px dashed rgba(255, 255, 255, 0.45);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.droneReticle::after {
+  content: '';
+  width: 6px;
+  height: 6px;
+  background: #4ade80;
+  border-radius: 50%;
+  box-shadow: 0 0 6px #4ade80;
+}
